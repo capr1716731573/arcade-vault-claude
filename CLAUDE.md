@@ -1,0 +1,34 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+"Arcade Vault" is an **Angular** application (Angular 22, standalone components, signals, `@angular/build`). All new code must be idiomatic Angular: standalone components with `templateUrl`, `input()`/`output()`/`viewChild()` signal APIs, `@for`/`@if` control flow, `computed()` for derived state, and routes in `src/app/app.routes.ts`. Do not introduce React, Next.js, or other frameworks.
+
+`resources/resources/templates/` holds a throwaway React prototype (the design/behavior reference) and is **only a source to port from** — never extend it or import from it. Ignore `resources/__MACOSX` (zip junk). Its `styles.css` is already ported to `src/styles.css` and is the global theme.
+
+## Commands
+
+- `npm start` — dev server (`ng serve`)
+- `npm run build` — production build
+- `npm run watch` — dev build in watch mode
+- `npm test` — unit tests via `ng test` (Vitest + jsdom, not Karma/Jasmine). Single file: `npx ng test --include=src/app/library/library.spec.ts`; one-shot run: `npx ng test --watch=false`
+- Formatting: Prettier (`printWidth` 100, single quotes, Angular parser for `.html`)
+
+## Angular app architecture (`src/app`)
+
+- `app.config.ts` — `provideRouter(routes)`; `app.html` renders the neon background layers (`av-bg`, `av-noise`) plus `<router-outlet />`.
+- `games/games.data.ts` — `Game` model, `CATS`, and the 8 `GAMES` (string ids like `bloque-buster`). Static mock data, no backend.
+- `library/` — ported library screen (`Library` with `query`/`cat` signals and a `computed` filtered list) and `game-card/` (`GameCard` with 3D tilt on hover; emits `selected`). Route `''`.
+- `src/styles.css` — single global stylesheet, CSS variables (`--cyan`, `--magenta`, `--mono`, …), `av-` prefix for layout classes, CSS-only cover art (`.cover-*`). Components do not use encapsulated styles; reuse these classes. Fonts (Press Start 2P, JetBrains Mono) load from Google Fonts in `src/index.html`.
+- UI text is in Spanish.
+
+## Port status (prototype → Angular)
+
+Done: library screen. Pending, in prototype files under `resources/resources/templates/`:
+- `nav.jsx` (navbar + mobile panel), footer from `app.jsx`
+- `detalle.jsx` (game detail) — `Library.onSelect` is a `console.log` stub until its route exists
+- `reproductor.jsx` (player, saves score), `auth.jsx`, `salon.jsx` (hall of fame), `seededScores()`/`PLAYERS` from `data.jsx`
+
+Prototype behavior to preserve when porting: routes were `{name, id?}` in the URL hash (`biblioteca` | `detalle` | `player` | `auth` | `salon`) → map to Angular routes; persistence is `localStorage` only (`av_user` for the logged-in user, `av_scores` for score entries with an `at` timestamp), with no real backend.
