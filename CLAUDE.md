@@ -25,14 +25,13 @@ Usa siempre frontend-design junto con ui-ux-pro-max para realizar la interfaz de
 - `app.config.ts` — `provideRouter(routes)`; `app.html` renders the neon background layers (`av-bg`, `av-noise`) plus `<router-outlet />`.
 - `games/games.data.ts` — `Game` model, `CATS`, and the 8 `GAMES` (string ids like `bloque-buster`). Static mock data, no backend.
 - `library/` — ported library screen (`Library` with `query`/`cat` signals and a `computed` filtered list) and `game-card/` (`GameCard` with 3D tilt on hover; emits `selected`). Route `''`.
+- `home/` — landing screen (`Home` with 6 sections: hero, features, games preview, stats, activity, pricing+FAQ+CTA). Route `juego` (exact, before `juego/:id`). Sub-components: `FloatingSilhouettes`, `FeatureIcon`, `MiniCard`; directive `Reveal` (IntersectionObserver, threshold 0.12). Data served by `HomeService` from `data/home.data.ts`.
 - `src/styles.css` — single global stylesheet, CSS variables (`--cyan`, `--magenta`, `--mono`, …), `av-` prefix for layout classes, CSS-only cover art (`.cover-*`). Components do not use encapsulated styles; reuse these classes. Fonts (Press Start 2P, JetBrains Mono) load from Google Fonts in `src/index.html`.
 - UI text is in Spanish.
 
 ## Port status (prototype → Angular)
 
-Done: library screen. Pending, in prototype files under `resources/resources/templates/`:
-- `nav.jsx` (navbar + mobile panel), footer from `app.jsx`
-- `detalle.jsx` (game detail) — `Library.onSelect` is a `console.log` stub until its route exists
-- `reproductor.jsx` (player, saves score), `auth.jsx`, `salon.jsx` (hall of fame), `seededScores()`/`PLAYERS` from `data.jsx`
+Done: library screen, home screen (`home.jsx` → `home/`), navbar "Inicio" link. Pending, in prototype files under `resources/resources/templates/`:
+- `about.jsx` (about page) — navbar "Acerca de" link waits for this spec
 
 Prototype behavior to preserve when porting: routes were `{name, id?}` in the URL hash (`biblioteca` | `detalle` | `player` | `auth` | `salon`) → map to Angular routes; persistence is `localStorage` only (`av_user` for the logged-in user, `av_scores` for score entries with an `at` timestamp), with no real backend.

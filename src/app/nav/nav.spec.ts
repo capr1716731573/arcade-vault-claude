@@ -11,6 +11,8 @@ describe('Nav', () => {
       providers: [
         provideRouter([
           { path: '', component: Nav },
+          { path: 'juego', component: Nav },
+          { path: 'juego/:id', component: Nav },
           { path: 'jugar/:id', component: Nav },
           { path: 'salon', component: Nav },
         ]),
@@ -54,7 +56,7 @@ describe('Nav', () => {
     const harness = await RouterTestingHarness.create();
     const fixture = TestBed.createComponent(Nav);
     const active = () =>
-      Array.from(el(fixture).querySelectorAll('.links a.active')).map((a) => a.textContent);
+      Array.from(el(fixture).querySelectorAll('.links a.active')).map((a) => a.textContent?.trim());
 
     await harness.navigateByUrl('/jugar/caida');
     fixture.detectChanges();
@@ -63,5 +65,13 @@ describe('Nav', () => {
     await harness.navigateByUrl('/salon');
     fixture.detectChanges();
     expect(active()).toEqual(['Salón de la Fama']);
+
+    await harness.navigateByUrl('/juego');
+    fixture.detectChanges();
+    expect(active()).toEqual(['Inicio']);
+
+    await harness.navigateByUrl('/juego/caida');
+    fixture.detectChanges();
+    expect(active()).toEqual(['Biblioteca']);
   });
 });

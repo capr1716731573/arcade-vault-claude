@@ -4,6 +4,7 @@
     <div class="logo-text neon-cyan">ARCADE <span class="neon-magenta">VAULT</span></div>
   </a>
   <div class="links">
+    <a routerLink="/juego" [class.active]="inHome()">Inicio</a>
     <a routerLink="/" [class.active]="inLibrary()">Biblioteca</a>
     <a routerLink="/salon" [class.active]="inHall()">Salón de la Fama</a>
   </div>
@@ -27,6 +28,7 @@
 <div class="av-mobile-backdrop" [class.open]="open()" (click)="open.set(false)"></div>
 <aside class="av-mobile-panel" [class.open]="open()" [attr.inert]="open() ? null : ''">
   <div class="pixel neon-cyan" style="font-size: 11px; margin-bottom: 16px">MENÚ</div>
+  <a routerLink="/juego" [class.active]="inHome()" (click)="open.set(false)">Inicio</a>
   <a routerLink="/" [class.active]="inLibrary()" (click)="open.set(false)">Biblioteca</a>
   <a routerLink="/salon" [class.active]="inHall()" (click)="open.set(false)">Salón de la Fama</a>
   <a routerLink="/acceso" [class.active]="inAuth()" (click)="open.set(false)">

@@ -24,6 +24,7 @@ export class Nav {
     { initialValue: this.router.url },
   );
 
+  protected readonly inHome = computed(() => this.url() === '/juego');
   protected readonly inLibrary = computed(() => {
     const u = this.url();
     return u === '/' || u.startsWith('/juego/') || u.startsWith('/jugar/');

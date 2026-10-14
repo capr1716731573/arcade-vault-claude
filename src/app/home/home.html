@@ -1,0 +1,170 @@
+<div class="home fade-in">
+
+  <!-- ===== HERO ===== -->
+  <section class="home-hero">
+    <av-floating-silhouettes />
+    <div class="home-hero-inner">
+      <div class="hero-eyebrow pixel neon-yellow">▸ INSERTA UNA MONEDA<span class="blink">_</span></div>
+      <h1 class="home-title">
+        <span class="line-1">EL ARCADE</span>
+        <span class="line-2">CLÁSICO ESTÁ</span>
+        <span class="line-3">DE VUELTA</span>
+      </h1>
+      <p class="home-sub">
+        Juega los mejores clásicos directamente en tu navegador.<br>
+        Sin descargas. Sin costo. Solo diversión.
+      </p>
+      <div class="home-ctas">
+        <a class="btn xl pulse" routerLink="/">▶&nbsp; EXPLORAR JUEGOS</a>
+        <a class="btn xl magenta" routerLink="/acceso">✦&nbsp; CREAR CUENTA</a>
+      </div>
+      <div class="hero-scroll" aria-hidden="true">
+        <span>DESLIZA</span>
+        <span class="arrow">▼</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ¿POR QUÉ ARCADE VAULT? ===== -->
+  <section class="home-section reveal" appReveal>
+    <div class="section-head">
+      <div class="kicker pixel neon-magenta">// 01</div>
+      <h2 class="section-title">¿POR QUÉ ARCADE VAULT?</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="feature-grid">
+      @for (f of features; track f.icon; let i = $index) {
+        <div class="feature-card {{ f.color }}" [style.transitionDelay]="(i * 80) + 'ms'">
+          <av-feature-icon [kind]="f.icon" />
+          <div class="ft-title pixel">{{ f.title }}</div>
+          <div class="ft-desc">{{ f.desc }}</div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== JUEGOS DISPONIBLES AHORA ===== -->
+  <section class="home-section reveal" appReveal>
+    <div class="section-head">
+      <div class="kicker pixel neon-cyan">// 02</div>
+      <h2 class="section-title">JUEGOS DISPONIBLES AHORA</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="mini-rail">
+      @for (g of previewGames; track g.id) {
+        <av-mini-card [game]="g" (selected)="onGameSelected($event)" />
+      }
+    </div>
+    <div style="text-align: center; margin-top: 24px">
+      <a class="btn lg" routerLink="/">VER TODOS LOS JUEGOS →</a>
+    </div>
+  </section>
+
+  <!-- ===== ESTADÍSTICAS ===== -->
+  <section class="home-stats reveal" appReveal>
+    <div class="stats-inner">
+      @for (st of stats; track st.unit; let i = $index) {
+        <div class="stat-block" [style.transitionDelay]="(i * 90) + 'ms'">
+          <div class="stat-n neon-yellow">{{ st.n }}</div>
+          <div class="stat-u pixel">{{ st.unit }}</div>
+          <div class="stat-s">{{ st.sub }}</div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== ACTIVIDAD EN VIVO ===== -->
+  <section class="home-section reveal" appReveal>
+    <div class="section-head">
+      <div class="kicker pixel neon-yellow">// 03</div>
+      <h2 class="section-title">ACTIVIDAD EN VIVO</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="activity-grid">
+
+      <!-- Últimas puntuaciones -->
+      <div class="activity-card">
+        <div class="ac-head">
+          <div class="ac-title pixel">▸ ÚLTIMAS PUNTUACIONES</div>
+          <div class="live-led"><span></span>EN VIVO</div>
+        </div>
+        <div class="ticker">
+          @for (r of activity; track r.player; let i = $index) {
+            <div class="tick-row" [style.animationDelay]="(i * 60) + 'ms'">
+              <span class="tk-p neon-{{ r.color }}">{{ r.player }}</span>
+              <span class="tk-mid">▸ {{ r.game }}</span>
+              <span class="tk-s">+{{ r.score.toLocaleString('es-ES') }}</span>
+              <span class="tk-t">{{ r.ago }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Top jugadores hoy -->
+      <div class="activity-card">
+        <div class="ac-head">
+          <div class="ac-title pixel neon-magenta">▸ TOP JUGADORES · HOY</div>
+          <a class="lb-link" routerLink="/salon">VER SALÓN →</a>
+        </div>
+        <div class="top-list">
+          @for (r of topToday; track r.rank) {
+            <div [class]="rankClass(r.rank)">
+              <span class="tp-rk">#{{ r.rank.toString().padStart(2, '0') }}</span>
+              <span class="tp-bar"></span>
+              <span class="tp-p">{{ r.player }}</span>
+              <span class="tp-s">{{ r.score.toLocaleString('es-ES') }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== PRECIOS ===== -->
+  <section class="home-section reveal" appReveal>
+    <div class="section-head">
+      <div class="kicker pixel neon-green">// 04</div>
+      <h2 class="section-title">PRECIOS</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="pricing-grid">
+
+      <div class="price-card">
+        <div class="pc-label pixel">PLAN ÚNICO</div>
+        <div class="pc-name pixel">JUGADOR VAULT</div>
+        <div class="pc-amount">
+          <span class="pc-amount-n">$0</span>
+          <span class="pc-amount-u">/ SIEMPRE</span>
+        </div>
+        <div class="pc-tag">SIN TRUCOS · SIN LETRA PEQUEÑA</div>
+        <ul class="pc-list">
+          @for (f of pricingFeatures; track f) {
+            <li>✔ {{ f }}</li>
+          }
+        </ul>
+        <a class="btn xl pulse" style="width: 100%; text-align: center" routerLink="/acceso">EMPEZAR GRATIS →</a>
+        <div class="pc-foot">No pedimos tarjeta. Nunca lo haremos.</div>
+        <div class="pc-stamp pixel">FREE<br>PLAY</div>
+      </div>
+
+      <div class="pricing-faq">
+        @for (faq of faqs; track faq.q) {
+          <div class="faq-item">
+            <div class="faq-q pixel">{{ faq.q }}</div>
+            <div class="faq-a">{{ faq.a }}</div>
+          </div>
+        }
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== CTA FINAL ===== -->
+  <section class="home-final reveal" appReveal>
+    <h2 class="final-title pixel">¿LISTO PARA JUGAR?</h2>
+    <a class="btn xl pulse final-cta" routerLink="/">INSERTAR MONEDA →</a>
+    <div class="final-tag">Gratis. Sin registro obligatorio. Empieza en segundos.</div>
+  </section>
+
+</div>
