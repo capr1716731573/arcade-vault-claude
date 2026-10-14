@@ -1,6 +1,6 @@
 # SPEC 01 — MVP visual de Arcade Vault (pantallas restantes)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** ninguna (la pantalla Biblioteca ya está portada en el commit `3916933`)
 > **Fecha:** 2026-10-13
 > **Objetivo:** Portar a Angular las pantallas pendientes del prototipo React (navbar, footer, detalle, reproductor simulado, acceso y salón de la fama), con datos ficticios en `src/app/data/` servidos por servicios.
