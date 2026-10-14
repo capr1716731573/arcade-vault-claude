@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { filter, map } from 'rxjs';
 import { EsNumberPipe } from '../shared/es-number.pipe';
 import { GamesService } from '../services/games.service';
 import { ScoresService } from '../services/scores.service';
@@ -18,9 +18,14 @@ export class GamePlayer {
   private readonly games = inject(GamesService);
   private readonly scores = inject(ScoresService);
 
+  private readonly route = inject(ActivatedRoute);
+
   private readonly id = toSignal(
-    inject(ActivatedRoute).paramMap.pipe(map((p) => p.get('id') ?? '')),
-    { requireSync: true },
+    this.route.paramMap.pipe(
+      map((p) => p.get('id') ?? ''),
+      filter((id) => !!id),
+    ),
+    { initialValue: this.route.snapshot.paramMap.get('id') ?? '' },
   );
 
   protected readonly game = computed(() => this.games.byId(this.id()));
