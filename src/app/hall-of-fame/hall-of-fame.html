@@ -1,0 +1,75 @@
+<div class="hall-head">
+  <h1>SALÓN DE LA FAMA</h1>
+  <p class="pixel" style="font-size: 10px">LOS NOMBRES QUE NUNCA SE BORRAN DE LA PANTALLA</p>
+</div>
+
+<div class="hall-tabs">
+  @for (g of games; track g.id) {
+    <button type="button" class="chip" [class.active]="tab() === g.id" (click)="tab.set(g.id)">
+      {{ g.title }}
+    </button>
+  }
+</div>
+
+@let r = rows();
+<div class="podium">
+  <div class="podium-slot silver">
+    <div class="rank-num">02</div>
+    <div class="name">{{ r[1].name }}</div>
+    <div class="score">{{ r[1].score | esNumber }}</div>
+    <div class="date">{{ r[1].date }}</div>
+  </div>
+  <div class="podium-slot gold">
+    <div class="pixel" style="font-size: 9px; color: var(--gold); letter-spacing: 0.18em">
+      CAMPEÓN
+    </div>
+    <div class="rank-num" style="font-size: 36px; margin-top: 4px">01</div>
+    <div class="name">{{ r[0].name }}</div>
+    <div class="score" style="font-size: 20px">{{ r[0].score | esNumber }}</div>
+    <div class="date">{{ r[0].date }}</div>
+  </div>
+  <div class="podium-slot bronze">
+    <div class="rank-num">03</div>
+    <div class="name">{{ r[2].name }}</div>
+    <div class="score">{{ r[2].score | esNumber }}</div>
+    <div class="date">{{ r[2].date }}</div>
+  </div>
+</div>
+
+<div class="hall-table">
+  <div class="th">
+    <div>RANGO</div>
+    <div>JUGADOR</div>
+    <div>PUNTUACIÓN</div>
+    <div>FECHA</div>
+  </div>
+  @for (row of r; track row.name; let i = $index) {
+    <div
+      class="tr"
+      [class.top1]="i === 0"
+      [class.top2]="i === 1"
+      [class.top3]="i === 2"
+      [style.animation-delay]="i * 50 + 'ms'"
+    >
+      <div class="rk">#{{ row.rank.toString().padStart(2, '0') }}</div>
+      <div class="pl">{{ row.name }}</div>
+      <div class="sc">{{ row.score | esNumber }}</div>
+      <div class="dt">{{ row.date }}</div>
+    </div>
+  }
+  @if (session.user(); as user) {
+    <div class="tr you-label">▸ TU MEJOR MARCA EN {{ game().title }}</div>
+    <div class="tr you" [style.animation-delay]="r.length * 50 + 50 + 'ms'">
+      <div class="rk" style="color: var(--yellow)">#{{ you().rank.toString().padStart(2, '0') }}</div>
+      <div class="pl" style="color: var(--yellow)">{{ user.name }}</div>
+      <div class="sc" style="color: var(--yellow); text-shadow: 0 0 6px rgba(245, 255, 0, 0.5)">
+        {{ you().score | esNumber }}
+      </div>
+      <div class="dt">11/05/2026</div>
+    </div>
+  }
+</div>
+
+<div style="text-align: center; margin-top: 32px">
+  <a class="btn lg" routerLink="/">VOLVER A LA BIBLIOTECA</a>
+</div>

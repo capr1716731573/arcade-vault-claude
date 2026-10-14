@@ -1,5 +1,6 @@
-import { Component, computed, signal } from '@angular/core';
-import { CATS, GAMES, Game } from '../games/games.data';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { Game, GamesService } from '../services/games.service';
 import { GameCard } from './game-card/game-card';
 
 @Component({
@@ -9,19 +10,22 @@ import { GameCard } from './game-card/game-card';
   host: { class: 'fade-in', style: 'display: block' },
 })
 export class Library {
-  protected readonly cats = CATS;
+  private readonly games = inject(GamesService);
+  private readonly router = inject(Router);
+
+  protected readonly cats = this.games.categories;
   protected readonly query = signal('');
   protected readonly cat = signal('TODOS');
 
   protected readonly filtered = computed(() => {
     const q = this.query().toLowerCase();
     const cat = this.cat();
-    return GAMES.filter(
+    return this.games.all().filter(
       (g) => (cat === 'TODOS' || g.cat === cat) && g.title.toLowerCase().includes(q),
     );
   });
 
   protected onSelect(game: Game) {
-    console.log('detalle', game.id);
+    this.router.navigate(['/juego', game.id]);
   }
 }

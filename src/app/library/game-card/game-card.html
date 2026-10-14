@@ -8,7 +8,7 @@
   <div class="row">
     <div class="score-badge">
       <span>MEJOR PUNTUACIÓN</span>
-      <b>{{ game().best | number: '1.0-0' : 'es-ES' }}</b>
+      <b>{{ game().best | esNumber }}</b>
     </div>
     <button type="button" class="btn {{ btnClass() }}" (click)="onPlay($event)">JUGAR</button>
   </div>
