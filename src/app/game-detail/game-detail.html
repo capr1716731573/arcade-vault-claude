@@ -1,0 +1,64 @@
+@if (game(); as g) {
+  <div class="av-detail">
+    <div>
+      <div class="detail-cover">
+        <div class="cover-bg {{ g.cover }}"></div>
+      </div>
+      <div style="margin-top: 20px" class="detail-info">
+        <div class="detail-tags">
+          <span>{{ g.cat }}</span>
+          <span>1 JUGADOR</span>
+          <span>TECLADO / TÁCTIL</span>
+          <span>RETRO 1985</span>
+        </div>
+        <h2 class="neon-cyan">{{ g.title }}</h2>
+        <p>{{ g.long }}</p>
+        <div class="stat-strip">
+          <div>
+            <div class="l">Partidas</div>
+            <div class="v">{{ g.plays }}</div>
+          </div>
+          <div>
+            <div class="l">Mejor global</div>
+            <div class="v" style="color: var(--magenta); text-shadow: 0 0 6px rgba(255, 0, 110, 0.5)">
+              {{ g.best | esNumber }}
+            </div>
+          </div>
+          <div>
+            <div class="l">Dificultad</div>
+            <div class="v" style="color: var(--yellow); text-shadow: 0 0 6px rgba(245, 255, 0, 0.5)">
+              ★ ★ ★ ☆ ☆
+            </div>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <a class="btn xl pulse" [routerLink]="['/jugar', g.id]">▶ JUGAR AHORA</a>
+          <a class="btn ghost lg" routerLink="/">VOLVER AL VAULT</a>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="leaderboard">
+        <h3>MEJORES PUNTUACIONES</h3>
+        @for (r of scores(); track r.name; let i = $index) {
+          <div
+            class="lb-row"
+            [class.top1]="i === 0"
+            [class.top2]="i === 1"
+            [class.top3]="i === 2"
+          >
+            <div class="rk">#{{ r.rank.toString().padStart(2, '0') }}</div>
+            <div class="pl">
+              {{ r.name }}
+              <div style="font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em">
+                {{ r.date }}
+              </div>
+            </div>
+            <div class="sc">{{ r.score | esNumber }}</div>
+          </div>
+        }
+      </div>
+    </aside>
+  </div>
+}

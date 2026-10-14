@@ -16,6 +16,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm test` — unit tests via `ng test` (Vitest + jsdom, not Karma/Jasmine). Single file: `npx ng test --include=src/app/library/library.spec.ts`; one-shot run: `npx ng test --watch=false`
 - Formatting: Prettier (`printWidth` 100, single quotes, Angular parser for `.html`)
 
+## Skills
+
+Usa siempre frontend-design junto con ui-ux-pro-max para realizar la interfaz de usuario, ponganse de acuerdo para que no se genere conflicto entre las dos
+
 ## Angular app architecture (`src/app`)
 
 - `app.config.ts` — `provideRouter(routes)`; `app.html` renders the neon background layers (`av-bg`, `av-noise`) plus `<router-outlet />`.

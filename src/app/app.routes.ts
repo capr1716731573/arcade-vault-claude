@@ -1,3 +1,15 @@
 import { Routes } from '@angular/router';
+import { Auth } from './auth/auth';
+import { GameDetail } from './game-detail/game-detail';
+import { GamePlayer } from './game-player/game-player';
+import { HallOfFame } from './hall-of-fame/hall-of-fame';
+import { Library } from './library/library';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  { path: '', component: Library },
+  { path: 'juego/:id', component: GameDetail },
+  { path: 'jugar/:id', component: GamePlayer },
+  { path: 'acceso', component: Auth },
+  { path: 'salon', component: HallOfFame },
+  { path: '**', redirectTo: '' },
+];

@@ -1,0 +1,15 @@
+<div class="cover">
+  <div class="cover-bg {{ game().cover }}"></div>
+  <div class="label">{{ game().cat }}</div>
+</div>
+<div class="meta">
+  <div class="title">{{ game().title }}</div>
+  <div class="desc">{{ game().short }}</div>
+  <div class="row">
+    <div class="score-badge">
+      <span>MEJOR PUNTUACIÓN</span>
+      <b>{{ game().best | esNumber }}</b>
+    </div>
+    <button type="button" class="btn {{ btnClass() }}" (click)="onPlay($event)">JUGAR</button>
+  </div>
+</div>

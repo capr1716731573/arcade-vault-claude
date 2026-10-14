@@ -1,0 +1,24 @@
+{
+  "git.autofetch": false,
+  "git.autoRepositoryDetection": "openEditors",
+  "git.repositoryScanMaxDepth": 1,
+  "git.detectSubmodules": false,
+  "git.showProgress": false,
+  "git.fetchOnPull": false,
+  "git.postCommitCommand": "none",
+  "scm.autoReveal": false,
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.angular/**": true,
+    "**/dist/**": true,
+    "**/resources/__MACOSX/**": true
+  },
+  "files.exclude": {
+    "**/__MACOSX": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.angular": true,
+    "**/dist": true
+  }
+}
