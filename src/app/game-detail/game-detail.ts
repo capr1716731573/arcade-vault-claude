@@ -27,7 +27,8 @@ export class GameDetail {
 
   constructor() {
     effect(() => {
-      if (!this.game()) this.router.navigateByUrl('/', { replaceUrl: true });
+      const id = this.id();
+      if (id && !this.game()) this.router.navigateByUrl('/', { replaceUrl: true });
     });
   }
 }
