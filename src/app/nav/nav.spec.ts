@@ -15,6 +15,7 @@ describe('Nav', () => {
           { path: 'juego/:id', component: Nav },
           { path: 'jugar/:id', component: Nav },
           { path: 'salon', component: Nav },
+          { path: 'acerca', component: Nav },
         ]),
       ],
     });
@@ -73,5 +74,9 @@ describe('Nav', () => {
     await harness.navigateByUrl('/juego/caida');
     fixture.detectChanges();
     expect(active()).toEqual(['Biblioteca']);
+
+    await harness.navigateByUrl('/acerca');
+    fixture.detectChanges();
+    expect(active()).toEqual(['Acerca de']);
   });
 });

@@ -30,5 +30,6 @@ export class Nav {
     return u === '/' || u.startsWith('/juego/') || u.startsWith('/jugar/');
   });
   protected readonly inHall = computed(() => this.url().startsWith('/salon'));
+  protected readonly inAbout = computed(() => this.url() === '/acerca');
   protected readonly inAuth = computed(() => this.url().startsWith('/acceso'));
 }

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { About } from './about/about';
 import { Auth } from './auth/auth';
 import { GameDetail } from './game-detail/game-detail';
 import { GamePlayer } from './game-player/game-player';
@@ -13,5 +14,6 @@ export const routes: Routes = [
   { path: 'jugar/:id', component: GamePlayer },
   { path: 'acceso', component: Auth },
   { path: 'salon', component: HallOfFame },
+  { path: 'acerca', component: About },
   { path: '**', redirectTo: '' },
 ];

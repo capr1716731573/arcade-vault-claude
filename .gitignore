@@ -39,9 +39,16 @@ testem.log
 /typings
 __screenshots__/
 
+# Environment variables / secrets (contienen la API key de Resend)
+.env
+.env.*
+.env-template
+
 # System files
 .DS_Store
 Thumbs.db
+__MACOSX/
+__pycache__/
 
 #Playwright
 .playwright-screenshots/*
