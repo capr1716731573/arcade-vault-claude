@@ -44,6 +44,12 @@ __screenshots__/
 .env.*
 .env-template
 
+# Config de entorno generada desde .env-template (scripts/generate-environment.mjs)
+/src/environments/environment.ts
+
+# Claude Code — settings personales (hook de formateo/lint)
+.claude/settings.local.json
+
 # System files
 .DS_Store
 Thumbs.db
@@ -56,4 +62,7 @@ __pycache__/
 
 .playwright-mcp/*
 !.playwright-mcp/.gitkeep
+
+# Material de referencia del curso (otros juegos/prototipos): solo local, no va al repo
+/references/
 
