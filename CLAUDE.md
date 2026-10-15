@@ -16,19 +16,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm test` — unit tests via `ng test` (Vitest + jsdom, not Karma/Jasmine). Single file: `npx ng test --include=src/app/library/library.spec.ts`; one-shot run: `npx ng test --watch=false`
 - Formatting: Prettier (`printWidth` 100, single quotes, Angular parser for `.html`)
 
+## Skills
+
+Usa siempre frontend-design junto con ui-ux-pro-max para realizar la interfaz de usuario, ponganse de acuerdo para que no se genere conflicto entre las dos
+
 ## Angular app architecture (`src/app`)
 
 - `app.config.ts` — `provideRouter(routes)`; `app.html` renders the neon background layers (`av-bg`, `av-noise`) plus `<router-outlet />`.
 - `games/games.data.ts` — `Game` model, `CATS`, and the 8 `GAMES` (string ids like `bloque-buster`). Static mock data, no backend.
 - `library/` — ported library screen (`Library` with `query`/`cat` signals and a `computed` filtered list) and `game-card/` (`GameCard` with 3D tilt on hover; emits `selected`). Route `''`.
+- `home/` — landing screen (`Home` with 6 sections: hero, features, games preview, stats, activity, pricing+FAQ+CTA). Route `juego` (exact, before `juego/:id`). Sub-components: `FloatingSilhouettes`, `FeatureIcon`, `MiniCard`; directive `Reveal` (IntersectionObserver, threshold 0.12). Data served by `HomeService` from `data/home.data.ts`.
 - `src/styles.css` — single global stylesheet, CSS variables (`--cyan`, `--magenta`, `--mono`, …), `av-` prefix for layout classes, CSS-only cover art (`.cover-*`). Components do not use encapsulated styles; reuse these classes. Fonts (Press Start 2P, JetBrains Mono) load from Google Fonts in `src/index.html`.
 - UI text is in Spanish.
 
 ## Port status (prototype → Angular)
 
-Done: library screen. Pending, in prototype files under `resources/resources/templates/`:
-- `nav.jsx` (navbar + mobile panel), footer from `app.jsx`
-- `detalle.jsx` (game detail) — `Library.onSelect` is a `console.log` stub until its route exists
-- `reproductor.jsx` (player, saves score), `auth.jsx`, `salon.jsx` (hall of fame), `seededScores()`/`PLAYERS` from `data.jsx`
+Done: library screen, home screen (`home.jsx` → `home/`), about + contact screen (`about.jsx` → `about/`), navbar "Inicio" and "Acerca de" links. All prototype screens under `resources/resources/templates/` are now ported; nothing pending.
+
+SPEC 03 introduced an Angular SSR server (`src/server.ts`, via `ng add @angular/ssr`) so the About contact form can send a real email through Resend: `POST /api/contacto`, with the pure logic in `src/app/contact/send-contact-email.ts` and the client façade `ContactService` (`src/app/services/contact.service.ts`). The Resend API key lives only in `.env-template` (gitignored) and is read from `process.env.API_KEY_RESEND` on the server — never in the client bundle. Pages still render client-side (`src/app/app.routes.server.ts` uses `RenderMode.Client`), and `angular.json` sets `security.allowedHosts: ["*"]` so the built server serves any host.
 
 Prototype behavior to preserve when porting: routes were `{name, id?}` in the URL hash (`biblioteca` | `detalle` | `player` | `auth` | `salon`) → map to Angular routes; persistence is `localStorage` only (`av_user` for the logged-in user, `av_scores` for score entries with an `at` timestamp), with no real backend.

@@ -1,0 +1,83 @@
+@if (game(); as g) {
+  <div class="player-hud">
+    <div style="display: flex; gap: 24px; flex-wrap: wrap">
+      <div class="hud-stat">
+        <div class="l">Jugador</div>
+        <div class="v" style="color: var(--ink)">{{ name() }}</div>
+      </div>
+      <div class="hud-stat">
+        <div class="l">Puntuación</div>
+        <div class="v">{{ score() | esNumber }}</div>
+      </div>
+      <div class="hud-stat lives">
+        <div class="l">Vidas</div>
+        <div class="v">{{ hearts() }}</div>
+      </div>
+      <div class="hud-stat level">
+        <div class="l">Nivel</div>
+        <div class="v">{{ level().toString().padStart(2, '0') }}</div>
+      </div>
+    </div>
+    <div class="hud-actions">
+      <button type="button" class="btn yellow" (click)="paused.set(!paused())">
+        {{ paused() ? 'REANUDAR' : 'PAUSA' }}
+      </button>
+      <button type="button" class="btn magenta" (click)="over.set(true)">FIN</button>
+      <a class="btn ghost" [routerLink]="['/juego', g.id]">SALIR</a>
+    </div>
+  </div>
+
+  <div class="crt">
+    <div class="crt-screen">
+      <div class="game-arena">
+        <div class="grid-floor"></div>
+        <div class="enemy e1"></div>
+        <div class="enemy e2"></div>
+        <div class="enemy e3"></div>
+        <div class="player-ship"></div>
+      </div>
+      @if (paused()) {
+        <div class="crt-content" style="background: rgba(0, 0, 0, 0.6); z-index: 5">
+          <div>
+            <div class="pixel neon-yellow" style="font-size: 22px">EN PAUSA</div>
+            <div class="mono" style="font-size: 11px; color: var(--ink-dim); margin-top: 10px; letter-spacing: 0.16em">
+              PULSA REANUDAR PARA CONTINUAR
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="crt-bottom">
+      <span class="led">SEÑAL OK</span>
+      <span>{{ g.title }} · CRT-83 · 60 HZ</span>
+      <span>CARGA · 1MB</span>
+    </div>
+  </div>
+
+  @if (over()) {
+    <div class="modal-bd">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="over-title">
+        <h2 id="over-title">FIN DEL JUEGO</h2>
+        <div class="final-label">PUNTUACIÓN FINAL</div>
+        <div class="final">{{ score() | esNumber }}</div>
+        @if (!saved()) {
+          <div class="input-row">
+            <input
+              placeholder="TUS INICIALES"
+              aria-label="Tus iniciales"
+              [value]="name()"
+              (input)="setName($any($event.target).value)"
+            />
+            <button type="button" class="btn yellow" (click)="save()">GUARDAR PUNTUACIÓN</button>
+          </div>
+        } @else {
+          <div class="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+        }
+        <div class="actions">
+          <button type="button" class="btn" (click)="restart()">JUGAR DE NUEVO</button>
+          <a class="btn magenta" routerLink="/">VOLVER AL VAULT</a>
+        </div>
+      </div>
+    </div>
+  }
+}

@@ -1,0 +1,43 @@
+<nav class="av-nav">
+  <a class="logo" routerLink="/" (click)="open.set(false)">
+    <div class="logo-mark"></div>
+    <div class="logo-text neon-cyan">ARCADE <span class="neon-magenta">VAULT</span></div>
+  </a>
+  <div class="links">
+    <a routerLink="/juego" [class.active]="inHome()">Inicio</a>
+    <a routerLink="/" [class.active]="inLibrary()">Biblioteca</a>
+    <a routerLink="/salon" [class.active]="inHall()">Salón de la Fama</a>
+    <a routerLink="/acerca" [class.active]="inAbout()">Acerca de</a>
+  </div>
+  <div class="spacer"></div>
+  <div class="coin-counter">
+    <span class="coin"></span>
+    <span>CRÉDITOS · 03</span>
+  </div>
+  @if (session.user(); as user) {
+    <button type="button" class="btn ghost auth-btn" (click)="session.logout()">
+      {{ user.name }} ▾
+    </button>
+  } @else {
+    <a class="btn auth-btn" routerLink="/acceso">Iniciar Sesión</a>
+  }
+  <button type="button" class="btn ghost hamburger" aria-label="Menú" (click)="open.set(true)">
+    ≡
+  </button>
+</nav>
+
+<div class="av-mobile-backdrop" [class.open]="open()" (click)="open.set(false)"></div>
+<aside class="av-mobile-panel" [class.open]="open()" [attr.inert]="open() ? null : ''">
+  <div class="pixel neon-cyan" style="font-size: 11px; margin-bottom: 16px">MENÚ</div>
+  <a routerLink="/juego" [class.active]="inHome()" (click)="open.set(false)">Inicio</a>
+  <a routerLink="/" [class.active]="inLibrary()" (click)="open.set(false)">Biblioteca</a>
+  <a routerLink="/salon" [class.active]="inHall()" (click)="open.set(false)">Salón de la Fama</a>
+  <a routerLink="/acerca" [class.active]="inAbout()" (click)="open.set(false)">Acerca de</a>
+  <a routerLink="/acceso" [class.active]="inAuth()" (click)="open.set(false)">
+    {{ session.user() ? 'Cuenta' : 'Iniciar Sesión' }}
+  </a>
+  <div style="flex: 1"></div>
+  <div class="pixel" style="font-size: 9px; color: var(--ink-faint); letter-spacing: 0.16em">
+    CRÉDITOS · 03
+  </div>
+</aside>

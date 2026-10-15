@@ -1,0 +1,9 @@
+<div class="mini-card" (click)="selected.emit(game())" (keydown.enter)="selected.emit(game())" tabindex="0" role="button" [attr.aria-label]="game().title">
+  <div class="mini-cover">
+    <div class="cover-bg {{ game().cover }}"></div>
+  </div>
+  <div class="mini-meta">
+    <div class="mini-title">{{ game().title }}</div>
+    <div class="mini-cat">{{ game().cat }}</div>
+  </div>
+</div>

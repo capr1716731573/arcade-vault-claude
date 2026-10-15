@@ -1,10 +1,10 @@
 import { Component, ElementRef, computed, inject, input, output } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
-import { Game } from '../../games/games.data';
+import { EsNumberPipe } from '../../shared/es-number.pipe';
+import { Game } from '../../services/games.service';
 
 @Component({
   selector: 'app-game-card',
-  imports: [DecimalPipe],
+  imports: [EsNumberPipe],
   templateUrl: './game-card.html',
   host: {
     class: 'card',

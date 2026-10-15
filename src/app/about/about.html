@@ -1,0 +1,127 @@
+<div class="about fade-in">
+  <!-- ACERCA DE -->
+  <section class="about-hero">
+    <div class="kicker pixel neon-yellow">▸ ACERCA DE</div>
+    <h1 class="about-title">ACERCA DE ARCADE VAULT</h1>
+    <p class="about-mission">
+      ARCADE VAULT nació del amor por los videojuegos clásicos. Nuestra misión es preservar y celebrar
+      los arcades que definieron una generación, haciéndolos accesibles para todos, en cualquier lugar
+      y sin costo.
+    </p>
+
+    <div class="highlight-row">
+      @for (h of highlights; track h.kind; let i = $index) {
+        <div class="highlight {{ h.color }}" [style.transitionDelay]="i * 80 + 'ms'">
+          <av-highlight-icon [kind]="h.kind" />
+          <div class="hl-text pixel">{{ h.text }}</div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- divider -->
+  <div class="about-divider reveal" appReveal aria-hidden="true">
+    <div class="div-bar"></div>
+    <div class="div-pixels">
+      @for (p of dividerPixels; track $index) {
+        <span [style.animationDelay]="$index * 80 + 'ms'"></span>
+      }
+    </div>
+    <div class="div-bar"></div>
+  </div>
+
+  <!-- CONTACTO -->
+  <section class="about-contact reveal" appReveal>
+    <div class="contact-grid">
+      <div class="contact-intro">
+        <div class="kicker pixel neon-cyan">▸ CONTACTO</div>
+        <h2 class="contact-title">CONTÁCTANOS</h2>
+        <p class="contact-sub">
+          ¿Tienes alguna sugerencia, quieres proponer un juego, o simplemente quieres saludar?
+          Escríbenos.
+        </p>
+        <div class="contact-tips">
+          @for (t of tips; track t.text) {
+            <div class="tip">
+              <span class="tip-led" [class.y]="t.led === 'y'" [class.m]="t.led === 'm'"></span>{{ t.text }}
+            </div>
+          }
+        </div>
+      </div>
+
+      <form class="contact-form" [class.shake]="shake()" (submit)="submit($event)">
+        @if (status() === 'ok') {
+          <div class="terminal-success">
+            <div class="term-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="term-title">VAULT-OS // TERMINAL</span>
+            </div>
+            <div class="term-body">
+              <div class="line"><span class="prompt">vault&#64;arcade:~$</span> ./send_message --to=team</div>
+              <div class="line dim">[OK] Conectando con servidor…</div>
+              <div class="line dim">[OK] Validando contenido…</div>
+              <div class="line dim">[OK] Transmitiendo paquete…</div>
+              <div class="line success">
+                &gt; MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, {{ sentName().toUpperCase() }}.<span class="caret">_</span>
+              </div>
+              <div style="margin-top: 18px">
+                <button class="btn ghost" type="button" (click)="reset()">ENVIAR OTRO MENSAJE</button>
+              </div>
+            </div>
+          </div>
+        } @else if (status() === 'error') {
+          <div class="terminal-success error">
+            <div class="term-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="term-title">VAULT-OS // TERMINAL</span>
+            </div>
+            <div class="term-body">
+              <div class="line"><span class="prompt">vault&#64;arcade:~$</span> ./send_message --to=team</div>
+              <div class="line dim">[OK] Conectando con servidor…</div>
+              <div class="line dim">[OK] Validando contenido…</div>
+              <div class="line error">
+                [ERROR] No se pudo transmitir el mensaje. Revisa tu conexión e inténtalo de nuevo.<span class="caret">_</span>
+              </div>
+              <div style="margin-top: 18px">
+                <button class="btn ghost" type="button" (click)="retry()">REINTENTAR</button>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="field">
+            <label for="c-name">NOMBRE</label>
+            <input
+              id="c-name"
+              [value]="name()"
+              (input)="name.set($any($event.target).value)"
+              placeholder="px_kai"
+            />
+          </div>
+          <div class="field">
+            <label for="c-email">CORREO ELECTRÓNICO</label>
+            <input
+              id="c-email"
+              type="email"
+              [value]="email()"
+              (input)="email.set($any($event.target).value)"
+              placeholder="jugador@vault.gg"
+            />
+          </div>
+          <div class="field">
+            <label for="c-msg">MENSAJE</label>
+            <textarea
+              id="c-msg"
+              rows="5"
+              [value]="msg()"
+              (input)="msg.set($any($event.target).value)"
+              placeholder="Cuéntanos qué tienes en mente…"
+            ></textarea>
+          </div>
+          <button class="btn xl press" type="submit" [disabled]="status() === 'sending'" style="width: 100%">
+            {{ status() === 'sending' ? '▶  TRANSMITIENDO…' : '▶  ENVIAR MENSAJE' }}
+          </button>
+        }
+      </form>
+    </div>
+  </section>
+</div>
