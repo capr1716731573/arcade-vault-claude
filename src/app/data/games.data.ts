@@ -1,5 +1,4 @@
 export type GameColor = 'cyan' | 'magenta' | 'yellow' | 'green';
-
 export interface Game {
   id: string;
   title: string;
@@ -10,11 +9,23 @@ export interface Game {
   color: GameColor;
   best: number;
   plays: string;
+  /** true solo en juegos reales jugables; ausente/false ⇒ badge "PRÓXIMAMENTE" (no bloquea). */
+  playable?: boolean;
 }
-
 export const CATS = ['TODOS', 'ARCADE', 'PUZZLE', 'SHOOTER', 'VERSUS'];
-
 export const GAMES: Game[] = [
+  {
+    id: 'asteroides',
+    title: 'ASTEROIDES',
+    short: 'Rota, propulsa y pulveriza la lluvia de rocas.',
+    long: 'Tu nave vectorial flota en un campo de asteroides de espacio toroidal. Rota, propulsa y dispara para partir cada roca grande en fragmentos cada vez más veloces. Atrapa el power-up de triple disparo y sobrevive oleada tras oleada.',
+    cat: 'SHOOTER',
+    cover: 'cover-asteroides',
+    color: 'cyan',
+    best: 0,
+    plays: '—',
+    playable: true,
+  },
   {
     id: 'bloque-buster',
     title: 'BLOQUE BUSTER',
@@ -25,6 +36,7 @@ export const GAMES: Game[] = [
     color: 'cyan',
     best: 28450,
     plays: '12.4K',
+    playable: false,
   },
   {
     id: 'caida',
@@ -36,6 +48,7 @@ export const GAMES: Game[] = [
     color: 'magenta',
     best: 184220,
     plays: '31.8K',
+    playable: false,
   },
   {
     id: 'serpentina',
@@ -47,6 +60,7 @@ export const GAMES: Game[] = [
     color: 'green',
     best: 7820,
     plays: '9.1K',
+    playable: false,
   },
   {
     id: 'gloton',
@@ -58,6 +72,7 @@ export const GAMES: Game[] = [
     color: 'yellow',
     best: 96400,
     plays: '27.2K',
+    playable: false,
   },
   {
     id: 'invasores',
@@ -69,6 +84,7 @@ export const GAMES: Game[] = [
     color: 'green',
     best: 54190,
     plays: '18.0K',
+    playable: false,
   },
   {
     id: 'rocas',
@@ -80,6 +96,7 @@ export const GAMES: Game[] = [
     color: 'yellow',
     best: 41200,
     plays: '15.6K',
+    playable: false,
   },
   {
     id: 'ranaria',
@@ -91,6 +108,7 @@ export const GAMES: Game[] = [
     color: 'green',
     best: 18900,
     plays: '6.4K',
+    playable: false,
   },
   {
     id: 'duelo-pixel',
@@ -102,5 +120,6 @@ export const GAMES: Game[] = [
     color: 'cyan',
     best: 24,
     plays: '4.2K',
+    playable: false,
   },
 ];
