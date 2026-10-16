@@ -1,6 +1,9 @@
 <div class="cover">
   <div class="cover-bg {{ game().cover }}"></div>
   <div class="label">{{ game().cat }}</div>
+  @if (!game().playable) {
+    <div class="soon-badge">PRÓXIMAMENTE</div>
+  }
 </div>
 <div class="meta">
   <div class="title">{{ game().title }}</div>

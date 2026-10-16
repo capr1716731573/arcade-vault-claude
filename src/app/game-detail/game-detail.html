@@ -3,6 +3,9 @@
     <div>
       <div class="detail-cover">
         <div class="cover-bg {{ g.cover }}"></div>
+        @if (!g.playable) {
+          <div class="soon-badge lg">PRÓXIMAMENTE</div>
+        }
       </div>
       <div style="margin-top: 20px" class="detail-info">
         <div class="detail-tags">
@@ -37,7 +40,6 @@
         </div>
       </div>
     </div>
-
     <aside>
       <div class="leaderboard">
         <h3>MEJORES PUNTUACIONES</h3>
