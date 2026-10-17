@@ -107,18 +107,29 @@
   <div class="av-save">
     <div class="final-label">PUNTUACIÓN FINAL</div>
     <div class="final">{{ score() | esNumber }}</div>
-    @if (!saved()) {
+    @if (saved()) {
+      <div class="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+    } @else {
       <div class="input-row">
         <input
           placeholder="TUS INICIALES"
           aria-label="Tus iniciales"
           [value]="name()"
+          [disabled]="saving()"
           (input)="setName($any($event.target).value)"
         />
-        <button type="button" class="btn yellow" (click)="save()">GUARDAR PUNTUACIÓN</button>
+        <button type="button" class="btn yellow" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'GUARDANDO…' : saveError() ? 'REINTENTAR' : 'GUARDAR PUNTUACIÓN' }}
+        </button>
       </div>
-    } @else {
-      <div class="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+      @if (saveError()) {
+        <div
+          class="mono"
+          style="color: var(--magenta); margin-top: 8px; font-size: 11px; letter-spacing: 0.08em"
+        >
+          ✕ {{ saveError() }}
+        </div>
+      }
     }
     <div class="save-hint mono">O PULSA «ESPACIO» EN LA PANTALLA PARA JUGAR DE NUEVO</div>
     <div class="save-actions">

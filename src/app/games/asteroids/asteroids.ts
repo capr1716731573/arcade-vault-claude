@@ -37,6 +37,8 @@ export class Asteroids implements OnDestroy {
   protected readonly phase = signal<AsteroidsPhase>('playing');
   protected readonly paused = signal(false);
   protected readonly saved = signal(false);
+  protected readonly saving = signal(false);
+  protected readonly saveError = signal<string | null>(null);
   protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
   protected readonly hearts = computed(() => '♥ '.repeat(this.lives()).trim() || '—');
   private engine: AsteroidsEngine | null = null;
@@ -78,7 +80,10 @@ export class Asteroids implements OnDestroy {
     this.tripleShot.set(s.tripleShot);
     this.phase.set(s.phase);
     // Al reiniciar la partida (ESPACIO en el canvas) se vuelve a permitir guardar.
-    if (s.phase === 'playing' && this.saved()) this.saved.set(false);
+    if (s.phase === 'playing' && (this.saved() || this.saveError())) {
+      this.saved.set(false);
+      this.saveError.set(null);
+    }
   }
   protected togglePause() {
     const engine = this.engine;
@@ -95,9 +100,17 @@ export class Asteroids implements OnDestroy {
   protected setName(value: string) {
     this.name.set(value.toUpperCase().slice(0, 10));
   }
-  protected save() {
-    if (this.phase() !== 'gameover' || this.saved()) return;
-    this.scores.save({ game: 'asteroides', score: this.score(), name: this.name() });
-    this.saved.set(true);
+  protected async save() {
+    if (this.phase() !== 'gameover' || this.saved() || this.saving()) return;
+    this.saving.set(true);
+    this.saveError.set(null);
+    const res = await this.scores.save({
+      game: 'asteroides',
+      score: this.score(),
+      name: this.name(),
+    });
+    this.saving.set(false);
+    if (res.ok) this.saved.set(true);
+    else this.saveError.set(res.error ?? 'No se pudo guardar la puntuación.');
   }
 }

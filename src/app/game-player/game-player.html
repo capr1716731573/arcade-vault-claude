@@ -1,4 +1,8 @@
-@if (game(); as g) {
+@if (gamesLoading()) {
+  <div style="text-align: center; padding: 80px; color: var(--ink-faint)">
+    <div class="pixel blink" style="font-size: 14px; color: var(--cyan)">CARGANDO…</div>
+  </div>
+} @else if (game(); as g) {
   <div class="player-hud">
     <div style="display: flex; gap: 24px; flex-wrap: wrap">
       <div class="hud-stat">
@@ -26,7 +30,6 @@
       <a class="btn ghost" [routerLink]="['/juego', g.id]">SALIR</a>
     </div>
   </div>
-
   <div class="crt">
     <div class="crt-screen">
       <div class="game-arena">
@@ -53,7 +56,6 @@
       <span>CARGA · 1MB</span>
     </div>
   </div>
-
   @if (over()) {
     <div class="modal-bd">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="over-title">

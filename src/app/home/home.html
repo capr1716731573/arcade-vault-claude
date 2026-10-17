@@ -1,5 +1,4 @@
 <div class="home fade-in">
-
   <!-- ===== HERO ===== -->
   <section class="home-hero">
     <av-floating-silhouettes />
@@ -24,7 +23,6 @@
       </div>
     </div>
   </section>
-
   <!-- ===== ¿POR QUÉ ARCADE VAULT? ===== -->
   <section class="home-section reveal" appReveal>
     <div class="section-head">
@@ -42,7 +40,6 @@
       }
     </div>
   </section>
-
   <!-- ===== JUEGOS DISPONIBLES AHORA ===== -->
   <section class="home-section reveal" appReveal>
     <div class="section-head">
@@ -51,7 +48,7 @@
       <div class="section-rule"></div>
     </div>
     <div class="mini-rail">
-      @for (g of previewGames; track g.id) {
+      @for (g of previewGames(); track g.id) {
         <av-mini-card [game]="g" (selected)="onGameSelected($event)" />
       }
     </div>
@@ -59,7 +56,6 @@
       <a class="btn lg" routerLink="/">VER TODOS LOS JUEGOS →</a>
     </div>
   </section>
-
   <!-- ===== ESTADÍSTICAS ===== -->
   <section class="home-stats reveal" appReveal>
     <div class="stats-inner">
@@ -72,7 +68,6 @@
       }
     </div>
   </section>
-
   <!-- ===== ACTIVIDAD EN VIVO ===== -->
   <section class="home-section reveal" appReveal>
     <div class="section-head">
@@ -81,7 +76,6 @@
       <div class="section-rule"></div>
     </div>
     <div class="activity-grid">
-
       <!-- Últimas puntuaciones -->
       <div class="activity-card">
         <div class="ac-head">
@@ -99,7 +93,6 @@
           }
         </div>
       </div>
-
       <!-- Top jugadores hoy -->
       <div class="activity-card">
         <div class="ac-head">
@@ -117,10 +110,8 @@
           }
         </div>
       </div>
-
     </div>
   </section>
-
   <!-- ===== PRECIOS ===== -->
   <section class="home-section reveal" appReveal>
     <div class="section-head">
@@ -129,7 +120,6 @@
       <div class="section-rule"></div>
     </div>
     <div class="pricing-grid">
-
       <div class="price-card">
         <div class="pc-label pixel">PLAN ÚNICO</div>
         <div class="pc-name pixel">JUGADOR VAULT</div>
@@ -147,7 +137,6 @@
         <div class="pc-foot">No pedimos tarjeta. Nunca lo haremos.</div>
         <div class="pc-stamp pixel">FREE<br>PLAY</div>
       </div>
-
       <div class="pricing-faq">
         @for (faq of faqs; track faq.q) {
           <div class="faq-item">
@@ -156,15 +145,12 @@
           </div>
         }
       </div>
-
     </div>
   </section>
-
   <!-- ===== CTA FINAL ===== -->
   <section class="home-final reveal" appReveal>
     <h2 class="final-title pixel">¿LISTO PARA JUGAR?</h2>
     <a class="btn xl pulse final-cta" routerLink="/">INSERTAR MONEDA →</a>
     <div class="final-tag">Gratis. Sin registro obligatorio. Empieza en segundos.</div>
   </section>
-
 </div>

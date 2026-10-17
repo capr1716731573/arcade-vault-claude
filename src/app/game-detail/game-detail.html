@@ -1,4 +1,15 @@
-@if (game(); as g) {
+@if (gamesLoading()) {
+  <div class="av-detail-state" style="text-align: center; padding: 80px; color: var(--ink-faint)">
+    <div class="pixel blink" style="font-size: 14px; color: var(--cyan)">CARGANDO JUEGO…</div>
+  </div>
+} @else if (gamesError()) {
+  <div class="av-detail-state" style="text-align: center; padding: 80px; color: var(--ink-faint)">
+    <div class="pixel" style="font-size: 14px; color: var(--magenta); margin-bottom: 16px">
+      ERROR AL CARGAR EL JUEGO
+    </div>
+    <button type="button" class="btn" (click)="retry()">REINTENTAR</button>
+  </div>
+} @else if (game(); as g) {
   <div class="av-detail">
     <div>
       <div class="detail-cover">
@@ -43,22 +54,32 @@
     <aside>
       <div class="leaderboard">
         <h3>MEJORES PUNTUACIONES</h3>
-        @for (r of scores(); track r.name; let i = $index) {
-          <div
-            class="lb-row"
-            [class.top1]="i === 0"
-            [class.top2]="i === 1"
-            [class.top3]="i === 2"
-          >
-            <div class="rk">#{{ r.rank.toString().padStart(2, '0') }}</div>
-            <div class="pl">
-              {{ r.name }}
-              <div style="font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em">
-                {{ r.date }}
-              </div>
-            </div>
-            <div class="sc">{{ r.score | esNumber }}</div>
+        @if (scoresLoading()) {
+          <div style="padding: 16px; text-align: center; color: var(--ink-faint); font-size: 12px">
+            Cargando…
           </div>
+        } @else {
+          @for (r of scores(); track r.name; let i = $index) {
+            <div
+              class="lb-row"
+              [class.top1]="i === 0"
+              [class.top2]="i === 1"
+              [class.top3]="i === 2"
+            >
+              <div class="rk">#{{ r.rank.toString().padStart(2, '0') }}</div>
+              <div class="pl">
+                {{ r.name }}
+                <div style="font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em">
+                  {{ r.date }}
+                </div>
+              </div>
+              <div class="sc">{{ r.score | esNumber }}</div>
+            </div>
+          } @empty {
+            <div style="padding: 16px; text-align: center; color: var(--ink-faint); font-size: 12px">
+              Aún no hay puntuaciones.
+            </div>
+          }
         }
       </div>
     </aside>
