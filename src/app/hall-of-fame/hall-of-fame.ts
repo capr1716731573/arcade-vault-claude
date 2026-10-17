@@ -1,10 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EsNumberPipe } from '../shared/es-number.pipe';
 import { GamesService } from '../services/games.service';
 import { ScoresService } from '../services/scores.service';
-import { SessionService } from '../services/session.service';
-
 @Component({
   selector: 'app-hall-of-fame',
   imports: [EsNumberPipe, RouterLink],
@@ -13,18 +11,24 @@ import { SessionService } from '../services/session.service';
 })
 export class HallOfFame {
   private readonly scores = inject(ScoresService);
-  protected readonly games = inject(GamesService).all();
-  protected readonly session = inject(SessionService);
-
-  protected readonly tab = signal(this.games[0].id);
-  protected readonly game = computed(() => this.games.find((g) => g.id === this.tab())!);
-  protected readonly rows = computed(() => this.scores.hallOfFame(this.tab(), 12));
-
-  protected readonly you = computed(() => {
-    const tab = this.tab();
-    return {
-      rank: 8 + (tab.length % 4),
-      score: (this.rows()[5]?.score ?? 0) - 2400 || 9999,
-    };
+  private readonly gamesService = inject(GamesService);
+  protected readonly games = this.gamesService.games;
+  protected readonly gamesLoading = this.gamesService.loading;
+  protected readonly tab = signal('');
+  protected readonly game = computed(() => this.games().find((g) => g.id === this.tab()));
+  private readonly rowsResource = resource({
+    params: () => this.tab() || undefined,
+    loader: ({ params }) => this.scores.hallOfFame(params, 12),
   });
+  protected readonly rows = computed(() =>
+    this.rowsResource.hasValue() ? this.rowsResource.value() : [],
+  );
+  protected readonly rowsLoading = this.rowsResource.isLoading;
+  constructor() {
+    // Seleccionar la primera pestaña cuando el catálogo termina de cargar.
+    effect(() => {
+      const gs = this.games();
+      if (gs.length && !this.tab()) this.tab.set(gs[0].id);
+    });
+  }
 }

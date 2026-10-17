@@ -1,40 +1,41 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { HallOfFame } from './hall-of-fame';
-import { SessionService } from '../services/session.service';
+import {
+  GAMES_FIXTURE,
+  MockData,
+  provideSupabaseMock,
+  scoreRow,
+} from '../testing/supabase-mock';
 describe('HallOfFame', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
-  });
-  const setup = () => {
-    const fixture = TestBed.createComponent(HallOfFame);
-    fixture.detectChanges();
-    return { fixture, el: fixture.nativeElement as HTMLElement };
+  const render = async (data: MockData) => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), provideSupabaseMock({ games: GAMES_FIXTURE, ...data })],
+    });
+    const fixture: ComponentFixture<HallOfFame> = TestBed.createComponent(HallOfFame);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    return fixture.nativeElement as HTMLElement;
   };
-  it('tiene 9 pestañas, podio y 12 filas', () => {
-    const { el } = setup();
+  it('muestra una pestaña por juego del catálogo', async () => {
+    const el = await render({ scores: [] });
     expect(el.querySelectorAll('.hall-tabs .chip').length).toBe(9);
+  });
+  it('sin puntuaciones muestra el estado vacío y no hay podio', async () => {
+    const el = await render({ scores: [] });
+    expect(el.textContent).toContain('SIN PUNTUACIONES AÚN');
+    expect(el.querySelectorAll('.podium-slot').length).toBe(0);
+  });
+  it('con marcas reales muestra podio (3) y filas de la tabla', async () => {
+    const el = await render({
+      scores: [scoreRow('ACE', 9000), scoreRow('NEO', 6500), scoreRow('VIX', 4200)],
+    });
     expect(el.querySelectorAll('.podium-slot').length).toBe(3);
-    expect(el.querySelectorAll('.hall-table .tr:not(.you):not(.you-label)').length).toBe(12);
+    expect(el.querySelectorAll('.hall-table .tr').length).toBe(3);
+    expect(el.querySelector('.podium-slot.gold .name')?.textContent).toContain('ACE');
   });
-  it('cambiar de pestaña actualiza la pestaña activa y el podio', () => {
-    const { fixture, el } = setup();
-    const champion = () => el.querySelector('.podium-slot.gold .name')?.textContent;
-    const first = champion();
-    const tabs = el.querySelectorAll<HTMLButtonElement>('.hall-tabs .chip');
-    tabs[1].click();
-    fixture.detectChanges();
-    expect(tabs[1].classList).toContain('active');
-    expect(tabs[0].classList).not.toContain('active');
-    expect(champion()).toBeTruthy();
-    expect(first).toBeTruthy();
-  });
-  it('"tu mejor marca" solo aparece con sesión', () => {
-    const { fixture, el } = setup();
+  it('no renderiza la fila "TÚ" simulada', async () => {
+    const el = await render({ scores: [scoreRow('ACE', 9000)] });
     expect(el.querySelector('.tr.you')).toBeNull();
-    TestBed.inject(SessionService).login('kai');
-    fixture.detectChanges();
-    expect(el.querySelector('.tr.you')?.textContent).toContain('KAI');
   });
 });

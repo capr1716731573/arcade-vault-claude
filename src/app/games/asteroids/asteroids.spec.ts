@@ -22,20 +22,29 @@ describe('Asteroids (componente)', () => {
     expect(el.querySelector('.hud-stat.level .v')?.textContent?.trim()).toBe('01');
     expect(el.querySelector('.hud-stat.lives .v')?.textContent?.trim()).toBe('♥ ♥ ♥');
   });
-  it('guardar solo funciona en gameover y envía game: "asteroides" al Salón, sin doble guardado', () => {
+  it('guardar solo funciona en gameover y envía game: "asteroides" al Salón, sin doble guardado', async () => {
     const scores = TestBed.inject(ScoresService);
-    const spy = vi.spyOn(scores, 'save');
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
     const comp = TestBed.createComponent(Asteroids).componentInstance as any;
-    comp.save(); // phase === 'playing' → no guarda
+    await comp.save(); // phase === 'playing' → no guarda
     expect(spy).not.toHaveBeenCalled();
     comp.phase.set('gameover');
     comp.score.set(999);
-    comp.save();
+    await comp.save();
     expect(spy).toHaveBeenCalledWith({ game: 'asteroides', score: 999, name: 'INVITADO' });
     expect(comp.saved()).toBe(true);
     spy.mockClear();
-    comp.save(); // ya guardado → no repite
+    await comp.save(); // ya guardado → no repite
     expect(spy).not.toHaveBeenCalled();
+  });
+  it('si el guardado falla no marca guardado y expone el error', async () => {
+    const scores = TestBed.inject(ScoresService);
+    vi.spyOn(scores, 'save').mockResolvedValue({ ok: false, error: 'boom' });
+    const comp = TestBed.createComponent(Asteroids).componentInstance as any;
+    comp.phase.set('gameover');
+    await comp.save();
+    expect(comp.saved()).toBe(false);
+    expect(comp.saveError()).toBe('boom');
   });
   it('applyState refleja el estado y reactiva el guardado al reiniciar', () => {
     const comp = TestBed.createComponent(Asteroids).componentInstance as any;

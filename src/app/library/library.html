@@ -2,7 +2,6 @@
   <h1 class="flicker">ARCADE VAULT</h1>
   <div class="sub">INSERTA UNA MONEDA PARA JUGAR <span class="blink">_</span></div>
 </section>
-
 <div class="av-filters">
   <div class="av-search">
     <span class="ico">⌕</span>
@@ -20,16 +19,36 @@
     }
   </div>
 </div>
-
-<div class="av-grid">
-  @for (g of filtered(); track g.id) {
-    <app-game-card [game]="g" (selected)="onSelect($event)" />
-  } @empty {
+@if (loading()) {
+  <div class="av-grid">
+    <div style="grid-column: 1 / -1; text-align: center; padding: 80px; color: var(--ink-faint)">
+      <div class="pixel blink" style="font-size: 14px; color: var(--cyan); margin-bottom: 12px">
+        CARGANDO JUEGOS…
+      </div>
+      <div>Conectando con el Vault.</div>
+    </div>
+  </div>
+} @else if (error()) {
+  <div class="av-grid">
     <div style="grid-column: 1 / -1; text-align: center; padding: 80px; color: var(--ink-faint)">
       <div class="pixel" style="font-size: 14px; color: var(--magenta); margin-bottom: 12px">
-        NO HAY RESULTADOS
+        ERROR AL CARGAR EL CATÁLOGO
       </div>
-      <div>Intenta otra búsqueda o categoría.</div>
+      <div style="margin-bottom: 16px">No se pudo leer la lista de juegos.</div>
+      <button type="button" class="btn" (click)="retry()">REINTENTAR</button>
     </div>
-  }
-</div>
+  </div>
+} @else {
+  <div class="av-grid">
+    @for (g of filtered(); track g.id) {
+      <app-game-card [game]="g" (selected)="onSelect($event)" />
+    } @empty {
+      <div style="grid-column: 1 / -1; text-align: center; padding: 80px; color: var(--ink-faint)">
+        <div class="pixel" style="font-size: 14px; color: var(--magenta); margin-bottom: 12px">
+          NO HAY RESULTADOS
+        </div>
+        <div>Intenta otra búsqueda o categoría.</div>
+      </div>
+    }
+  </div>
+}

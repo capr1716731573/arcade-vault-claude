@@ -6,7 +6,6 @@ import { EsNumberPipe } from '../shared/es-number.pipe';
 import { GamesService } from '../services/games.service';
 import { ScoresService } from '../services/scores.service';
 import { SessionService } from '../services/session.service';
-
 @Component({
   selector: 'app-game-player',
   imports: [EsNumberPipe, RouterLink],
@@ -17,9 +16,7 @@ export class GamePlayer {
   private readonly router = inject(Router);
   private readonly games = inject(GamesService);
   private readonly scores = inject(ScoresService);
-
   private readonly route = inject(ActivatedRoute);
-
   private readonly id = toSignal(
     this.route.paramMap.pipe(
       map((p) => p.get('id') ?? ''),
@@ -27,9 +24,8 @@ export class GamePlayer {
     ),
     { initialValue: this.route.snapshot.paramMap.get('id') ?? '' },
   );
-
   protected readonly game = computed(() => this.games.byId(this.id()));
-
+  protected readonly gamesLoading = this.games.loading;
   protected readonly score = signal(0);
   protected readonly lives = signal(3);
   protected readonly level = signal(1);
@@ -37,39 +33,34 @@ export class GamePlayer {
   protected readonly over = signal(false);
   protected readonly saved = signal(false);
   protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
-
   protected readonly hearts = computed(() => '♥ '.repeat(this.lives()).trim() || '—');
-
   constructor() {
     effect(() => {
+      // Esperar a que el catálogo cargue antes de redirigir (byId() es undefined mientras carga).
+      if (this.games.loading()) return;
       const id = this.id();
       if (id && !this.game()) this.router.navigateByUrl('/', { replaceUrl: true });
     });
-
     effect((onCleanup) => {
       if (this.over() || this.paused()) return;
       const t = setInterval(() => this.tick(), 220);
       onCleanup(() => clearInterval(t));
     });
   }
-
   private tick() {
     const next = this.score() + Math.floor(10 + Math.random() * 90);
     this.score.set(next);
     if (next % 2500 < 100) this.level.update((l) => l + 1);
   }
-
   protected setName(value: string) {
     this.name.set(value.toUpperCase().slice(0, 10));
   }
-
-  protected save() {
+  protected async save() {
     const game = this.game();
     if (!game) return;
-    this.scores.save({ game: game.id, score: this.score(), name: this.name() });
-    this.saved.set(true);
+    const res = await this.scores.save({ game: game.id, score: this.score(), name: this.name() });
+    if (res.ok) this.saved.set(true);
   }
-
   protected restart() {
     this.score.set(0);
     this.lives.set(3);

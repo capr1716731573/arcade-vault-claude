@@ -1,6 +1,6 @@
 # SPEC 04 — Integración de Supabase (cimientos)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03 (servidor SSR y `.env-template` cargado con `process.loadEnvFile`), SPEC 01 (convención de servicios fachada en `src/app/services/`)
 > **Fecha:** 2026-10-15
 > **Objetivo:** Integrar `@supabase/supabase-js` como cliente directo + RLS mediante un `SupabaseService` central configurado desde `.env-template`, sin añadir aún autenticación, tablas ni UI.
