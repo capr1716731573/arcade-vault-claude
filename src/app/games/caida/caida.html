@@ -1,0 +1,139 @@
+<div class="player-hud">
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: center">
+    <div class="hud-stat">
+      <div class="l">Puntuación</div>
+      <div class="v">{{ score() | esNumber }}</div>
+    </div>
+    <div class="hud-stat">
+      <div class="l">Líneas</div>
+      <div class="v">{{ lines() }}</div>
+    </div>
+    <div class="hud-stat level">
+      <div class="l">Nivel</div>
+      <div class="v">{{ level().toString().padStart(2, '0') }}</div>
+    </div>
+    <div class="hud-stat">
+      <div class="l">Siguiente</div>
+      <canvas #next class="caida-next" width="96" height="96" aria-hidden="true"></canvas>
+    </div>
+  </div>
+  <div class="hud-actions">
+    <button
+      type="button"
+      class="btn ghost"
+      [attr.aria-pressed]="boardTheme() === 'light'"
+      (click)="toggleTheme()"
+    >
+      {{ boardTheme() === 'dark' ? 'TEMA CLARO' : 'TEMA OSCURO' }}
+    </button>
+    <button type="button" class="btn yellow" (click)="togglePause()">
+      {{ paused() ? 'REANUDAR' : 'PAUSA' }}
+    </button>
+    <a class="btn ghost" routerLink="/juego/caida">SALIR</a>
+  </div>
+</div>
+<div class="crt">
+  <div class="crt-screen">
+    <canvas #canvas class="caida-canvas" aria-label="Tablero de Caída"></canvas>
+  </div>
+  <div class="touch-controls">
+    <div class="touch-cluster">
+      <button
+        type="button"
+        class="touch-btn"
+        aria-label="Mover a la izquierda"
+        (pointerdown)="press('left', true, $event)"
+        (pointerup)="press('left', false, $event)"
+        (pointerleave)="press('left', false, $event)"
+        (pointercancel)="press('left', false, $event)"
+      >
+        ◀
+      </button>
+      <button
+        type="button"
+        class="touch-btn"
+        aria-label="Mover a la derecha"
+        (pointerdown)="press('right', true, $event)"
+        (pointerup)="press('right', false, $event)"
+        (pointerleave)="press('right', false, $event)"
+        (pointercancel)="press('right', false, $event)"
+      >
+        ▶
+      </button>
+    </div>
+    <div class="touch-cluster">
+      <button
+        type="button"
+        class="touch-btn"
+        aria-label="Rotar"
+        (pointerdown)="press('rotate', true, $event)"
+        (pointerup)="press('rotate', false, $event)"
+        (pointerleave)="press('rotate', false, $event)"
+        (pointercancel)="press('rotate', false, $event)"
+      >
+        ⟳
+      </button>
+      <button
+        type="button"
+        class="touch-btn"
+        aria-label="Bajar"
+        (pointerdown)="press('soft', true, $event)"
+        (pointerup)="press('soft', false, $event)"
+        (pointerleave)="press('soft', false, $event)"
+        (pointercancel)="press('soft', false, $event)"
+      >
+        ▼
+      </button>
+      <button
+        type="button"
+        class="touch-btn fire"
+        aria-label="Caída dura"
+        (pointerdown)="press('hard', true, $event)"
+        (pointerup)="press('hard', false, $event)"
+        (pointerleave)="press('hard', false, $event)"
+        (pointercancel)="press('hard', false, $event)"
+      >
+        ⤓ CAÍDA
+      </button>
+    </div>
+  </div>
+  <div class="crt-bottom">
+    <span class="led">SEÑAL OK</span>
+    <span>CAÍDA · CRT-83 · 60 HZ</span>
+    <span>CARGA · 1MB</span>
+  </div>
+</div>
+@if (phase() === 'gameover') {
+  <div class="av-save">
+    <div class="final-label">PUNTUACIÓN FINAL</div>
+    <div class="final">{{ score() | esNumber }}</div>
+    @if (saved()) {
+      <div class="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+    } @else {
+      <div class="input-row">
+        <input
+          placeholder="TUS INICIALES"
+          aria-label="Tus iniciales"
+          [value]="name()"
+          [disabled]="saving()"
+          (input)="setName($any($event.target).value)"
+        />
+        <button type="button" class="btn yellow" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'GUARDANDO…' : saveError() ? 'REINTENTAR' : 'GUARDAR PUNTUACIÓN' }}
+        </button>
+      </div>
+      @if (saveError()) {
+        <div
+          class="mono"
+          style="color: var(--magenta); margin-top: 8px; font-size: 11px; letter-spacing: 0.08em"
+        >
+          ✕ {{ saveError() }}
+        </div>
+      }
+    }
+    <div class="save-hint mono">O PULSA «ESPACIO» EN LA PANTALLA PARA JUGAR DE NUEVO</div>
+    <div class="save-actions">
+      <a class="btn magenta" routerLink="/">VOLVER AL VAULT</a>
+    </div>
+  </div>
+}

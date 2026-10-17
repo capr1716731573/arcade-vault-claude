@@ -851,6 +851,46 @@ app-root { position: relative; z-index: 2; display: flex; flex-direction: column
     border-right-color: transparent;
   }
 }
+/* ===== CAÍDA / TETRIS (SPEC 07) =====
+   El tablero en vivo (canvas) es el protagonista; el chrome reutiliza el marco
+   neón de Asteroides. El tablero es portrait 10×20, así que la pantalla CRT de
+   este juego se estrecha a una columna 1:2 centrada. El tema claro/oscuro del
+   tablero lo dibuja el motor (no hay CSS de paleta de tablero aquí). */
+app-caida .crt {
+  max-width: 360px; /* gabinete portrait: el bezel abraza la columna del tablero */
+  margin-inline: auto;
+}
+app-caida .crt-screen {
+  aspect-ratio: 1 / 2; /* columna del tablero 10×20 */
+  max-width: 320px;
+  max-height: 80vh; /* el motor centra el tablero con celdas cuadradas si se acota */
+  margin-inline: auto;
+}
+.caida-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none; /* sin scroll/zoom al jugar sobre el canvas */
+}
+/* Vista previa de la siguiente pieza (el motor la dibuja; aquí solo el marco). */
+.caida-next {
+  width: 76px;
+  height: 76px;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #06060f; /* fallback antes del primer render del motor */
+}
+/* Foco visible en los botones táctiles (faltaba; mejora común a todos los juegos). */
+.touch-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.touch-btn.fire:focus-visible {
+  outline-color: var(--magenta);
+}
 /* fake in-screen game */
 .game-arena {
   position: absolute; inset: 0;

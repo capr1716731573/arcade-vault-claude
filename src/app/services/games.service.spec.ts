@@ -17,6 +17,7 @@ describe('GamesService', () => {
     const service = setup();
     await settle();
     expect(service.byId('caida')?.title).toBe('CAÍDA');
+    expect(service.byId('caida')?.playable).toBe(true);
     expect(service.byId('asteroides')?.playable).toBe(true);
     expect(service.byId('nope')).toBeUndefined();
   });
