@@ -1,0 +1,103 @@
+<div class="player-hud">
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: center">
+    <div class="hud-stat">
+      <div class="l">Puntuación</div>
+      <div class="v">{{ score() | esNumber }}</div>
+    </div>
+    <div class="hud-stat" [attr.aria-label]="lives() + ' vidas restantes'">
+      <div class="l">Vidas</div>
+      <div class="v" aria-hidden="true">{{ '●'.repeat(lives()) || '—' }}</div>
+    </div>
+    <div class="hud-stat level">
+      <div class="l">Nivel</div>
+      <div class="v">{{ level().toString().padStart(2, '0') }}</div>
+    </div>
+  </div>
+  <div class="hud-actions">
+    <button
+      type="button"
+      class="btn ghost"
+      aria-label="Silenciar efectos de sonido"
+      [attr.aria-pressed]="muted()"
+      (click)="toggleMuted()"
+    >
+      {{ muted() ? 'SONIDO: OFF' : 'SONIDO: ON' }}
+    </button>
+    <button type="button" class="btn yellow" (click)="togglePause()">
+      {{ paused() ? 'REANUDAR' : 'PAUSA' }}
+    </button>
+    <a class="btn ghost" routerLink="/juego/bloque-buster">SALIR</a>
+  </div>
+</div>
+<div class="crt">
+  <div class="crt-screen">
+    <canvas #canvas class="bloque-buster-canvas" aria-label="Pantalla de Bloque Buster"></canvas>
+  </div>
+  <div class="touch-controls">
+    <div class="touch-cluster">
+      <button
+        type="button"
+        class="touch-btn"
+        aria-label="Mover a la izquierda"
+        (pointerdown)="press('left', true, $event)"
+        (pointerup)="press('left', false, $event)"
+        (pointerleave)="press('left', false, $event)"
+        (pointercancel)="press('left', false, $event)"
+      >
+        ◀
+      </button>
+      <button
+        type="button"
+        class="touch-btn"
+        aria-label="Mover a la derecha"
+        (pointerdown)="press('right', true, $event)"
+        (pointerup)="press('right', false, $event)"
+        (pointerleave)="press('right', false, $event)"
+        (pointercancel)="press('right', false, $event)"
+      >
+        ▶
+      </button>
+    </div>
+  </div>
+  <div class="crt-bottom">
+    <span class="led">SEÑAL OK</span>
+    <span>BLOQUE BUSTER · CRT-83 · 60 HZ</span>
+    <span>CARGA · 1MB</span>
+  </div>
+</div>
+@if (phase() === 'gameover' || phase() === 'win') {
+  <div class="av-save">
+    <div class="final-label">
+      {{ phase() === 'win' ? '¡COMPLETADO! · PUNTUACIÓN FINAL' : 'PUNTUACIÓN FINAL' }}
+    </div>
+    <div class="final">{{ score() | esNumber }}</div>
+    @if (saved()) {
+      <div class="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+    } @else {
+      <div class="input-row">
+        <input
+          placeholder="TUS INICIALES"
+          aria-label="Tus iniciales"
+          [value]="name()"
+          [disabled]="saving()"
+          (input)="setName($any($event.target).value)"
+        />
+        <button type="button" class="btn yellow" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'GUARDANDO…' : saveError() ? 'REINTENTAR' : 'GUARDAR PUNTUACIÓN' }}
+        </button>
+      </div>
+      @if (saveError()) {
+        <div
+          class="mono"
+          style="color: var(--magenta); margin-top: 8px; font-size: 11px; letter-spacing: 0.08em"
+        >
+          ✕ {{ saveError() }}
+        </div>
+      }
+    }
+    <div class="save-hint mono">O PULSA «ESPACIO» EN LA PANTALLA PARA JUGAR DE NUEVO</div>
+    <div class="save-actions">
+      <a class="btn magenta" routerLink="/">VOLVER AL VAULT</a>
+    </div>
+  </div>
+}

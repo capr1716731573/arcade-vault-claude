@@ -9,7 +9,7 @@ describe('GamesService', () => {
   it('lee el catálogo desde Supabase (ordenado) y expone las categorías', async () => {
     const service = setup();
     await settle();
-    expect(service.all().length).toBe(9);
+    expect(service.all().length).toBe(4);
     expect(service.all()[0].id).toBe('asteroides');
     expect(service.categories[0]).toBe('TODOS');
   });
@@ -19,6 +19,7 @@ describe('GamesService', () => {
     expect(service.byId('caida')?.title).toBe('CAÍDA');
     expect(service.byId('caida')?.playable).toBe(true);
     expect(service.byId('asteroides')?.playable).toBe(true);
+    expect(service.byId('bloque-buster')?.playable).toBe(true);
     expect(service.byId('nope')).toBeUndefined();
   });
   it('expone el estado de error cuando la consulta falla', async () => {

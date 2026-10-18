@@ -2,18 +2,22 @@ import { Routes } from '@angular/router';
 import { About } from './about/about';
 import { Asteroids } from './games/asteroids/asteroids';
 import { Auth } from './auth/auth';
+import { BloqueBuster } from './games/bloque-buster/bloque-buster';
 import { Caida } from './games/caida/caida';
 import { GameDetail } from './game-detail/game-detail';
 import { GamePlayer } from './game-player/game-player';
 import { HallOfFame } from './hall-of-fame/hall-of-fame';
 import { Home } from './home/home';
 import { Library } from './library/library';
+import { Snake } from './games/snake/snake';
 export const routes: Routes = [
   { path: '', component: Library },
   { path: 'juego', component: Home },
   { path: 'juego/:id', component: GameDetail },
   { path: 'jugar/asteroides', component: Asteroids },
   { path: 'jugar/caida', component: Caida },
+  { path: 'jugar/bloque-buster', component: BloqueBuster },
+  { path: 'jugar/snake', component: Snake },
   { path: 'jugar/:id', component: GamePlayer },
   { path: 'acceso', component: Auth },
   { path: 'salon', component: HallOfFame },

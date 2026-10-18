@@ -35,17 +35,12 @@ const g = (
   playable,
   position,
 });
-/** 9 juegos de ejemplo con la misma forma/orden que la siembra real. */
+/** Catálogo real (SPEC 09): solo juegos implementados, misma forma/orden que la siembra. */
 export const GAMES_FIXTURE: GameRow[] = [
   g('asteroides', 'ASTEROIDES', 'SHOOTER', 'cyan', 0, true),
-  g('bloque-buster', 'BLOQUE BUSTER', 'ARCADE', 'cyan', 1),
+  g('bloque-buster', 'BLOQUE BUSTER', 'ARCADE', 'cyan', 1, true),
   g('caida', 'CAÍDA', 'PUZZLE', 'magenta', 2, true),
-  g('serpentina', 'SERPENTINA', 'ARCADE', 'green', 3),
-  g('gloton', 'GLOTÓN', 'ARCADE', 'yellow', 4),
-  g('invasores', 'INVASORES', 'SHOOTER', 'green', 5),
-  g('rocas', 'ROCAS', 'SHOOTER', 'yellow', 6),
-  g('ranaria', 'RANARIA', 'ARCADE', 'green', 7),
-  g('duelo-pixel', 'DUELO PIXEL', 'VERSUS', 'cyan', 8),
+  g('snake', 'SNAKE', 'ARCADE', 'green', 3, true),
 ];
 export interface ScoreDbRow {
   name: string;

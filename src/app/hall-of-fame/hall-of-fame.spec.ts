@@ -19,7 +19,7 @@ describe('HallOfFame', () => {
   };
   it('muestra una pestaña por juego del catálogo', async () => {
     const el = await render({ scores: [] });
-    expect(el.querySelectorAll('.hall-tabs .chip').length).toBe(9);
+    expect(el.querySelectorAll('.hall-tabs .chip').length).toBe(4);
   });
   it('sin puntuaciones muestra el estado vacío y no hay podio', async () => {
     const el = await render({ scores: [] });

@@ -25,11 +25,11 @@ describe('Home', () => {
     const { el } = setup();
     expect(el.querySelectorAll('.feature-card').length).toBe(4);
   });
-  it('renderiza 6 mini-tarjetas del catálogo (async)', async () => {
+  it('renderiza una mini-tarjeta por juego del catálogo (async)', async () => {
     const fixture = TestBed.createComponent(Home);
     fixture.autoDetectChanges();
     await fixture.whenStable();
-    expect((fixture.nativeElement as HTMLElement).querySelectorAll('av-mini-card').length).toBe(6);
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('av-mini-card').length).toBe(4);
   });
   it('renderiza 3 bloques de estadísticas', () => {
     const { el } = setup();
