@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { About } from './about/about';
 import { Asteroids } from './games/asteroids/asteroids';
 import { Auth } from './auth/auth';
+import { BloqueBuster } from './games/bloque-buster/bloque-buster';
 import { Caida } from './games/caida/caida';
 import { GameDetail } from './game-detail/game-detail';
 import { GamePlayer } from './game-player/game-player';
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'juego/:id', component: GameDetail },
   { path: 'jugar/asteroides', component: Asteroids },
   { path: 'jugar/caida', component: Caida },
+  { path: 'jugar/bloque-buster', component: BloqueBuster },
   { path: 'jugar/:id', component: GamePlayer },
   { path: 'acceso', component: Auth },
   { path: 'salon', component: HallOfFame },

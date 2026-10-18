@@ -891,6 +891,36 @@ app-caida .crt-screen {
 .touch-btn.fire:focus-visible {
   outline-color: var(--magenta);
 }
+/* ===== BLOQUE BUSTER / ARKANOID (SPEC 08) =====
+   Tercer juego real. Reutiliza el marco neón de Asteroides tal cual: la pantalla
+   CRT base ya es 4:3, que coincide con el plano lógico 800×600 del motor, así que
+   la rejilla de bloques no se deforma y NO hace falta tocar .crt-screen. Solo se
+   añade el canvas a pantalla completa, se centra el único clúster táctil (◀/▶) y
+   se marca el estado "sonido silenciado" del toggle. */
+.bloque-buster-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none; /* sin scroll/zoom al jugar/arrastrar sobre el canvas */
+}
+/* Un solo clúster táctil (←/→): la base usa space-between para dos clústers
+   (como Caída), así que aquí se centra. */
+app-bloque-buster .touch-controls {
+  justify-content: center;
+}
+/* Botón de silencio: cuando el sonido está OFF (aria-pressed), un tinte magenta
+   refuerza el texto "SONIDO: OFF" sin depender solo del color (el label ya lo
+   dice). Scope app-bloque-buster para no afectar al toggle de tema de Caída, que
+   comparte .btn.ghost[aria-pressed]. */
+app-bloque-buster .btn.ghost[aria-pressed='true'] {
+  color: var(--ink);
+  border-color: var(--magenta);
+  box-shadow:
+    0 0 10px rgba(255, 0, 110, 0.28),
+    inset 0 0 8px rgba(255, 0, 110, 0.12);
+}
 /* fake in-screen game */
 .game-arena {
   position: absolute; inset: 0;

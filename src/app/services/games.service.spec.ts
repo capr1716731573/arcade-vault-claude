@@ -19,6 +19,7 @@ describe('GamesService', () => {
     expect(service.byId('caida')?.title).toBe('CAÍDA');
     expect(service.byId('caida')?.playable).toBe(true);
     expect(service.byId('asteroides')?.playable).toBe(true);
+    expect(service.byId('bloque-buster')?.playable).toBe(true);
     expect(service.byId('nope')).toBeUndefined();
   });
   it('expone el estado de error cuando la consulta falla', async () => {

@@ -38,7 +38,7 @@ const g = (
 /** 9 juegos de ejemplo con la misma forma/orden que la siembra real. */
 export const GAMES_FIXTURE: GameRow[] = [
   g('asteroides', 'ASTEROIDES', 'SHOOTER', 'cyan', 0, true),
-  g('bloque-buster', 'BLOQUE BUSTER', 'ARCADE', 'cyan', 1),
+  g('bloque-buster', 'BLOQUE BUSTER', 'ARCADE', 'cyan', 1, true),
   g('caida', 'CAÍDA', 'PUZZLE', 'magenta', 2, true),
   g('serpentina', 'SERPENTINA', 'ARCADE', 'green', 3),
   g('gloton', 'GLOTÓN', 'ARCADE', 'yellow', 4),
