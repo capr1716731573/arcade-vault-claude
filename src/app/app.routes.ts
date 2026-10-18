@@ -9,6 +9,7 @@ import { GamePlayer } from './game-player/game-player';
 import { HallOfFame } from './hall-of-fame/hall-of-fame';
 import { Home } from './home/home';
 import { Library } from './library/library';
+import { Snake } from './games/snake/snake';
 export const routes: Routes = [
   { path: '', component: Library },
   { path: 'juego', component: Home },
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'jugar/asteroides', component: Asteroids },
   { path: 'jugar/caida', component: Caida },
   { path: 'jugar/bloque-buster', component: BloqueBuster },
+  { path: 'jugar/snake', component: Snake },
   { path: 'jugar/:id', component: GamePlayer },
   { path: 'acceso', component: Auth },
   { path: 'salon', component: HallOfFame },

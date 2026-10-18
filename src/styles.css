@@ -921,6 +921,56 @@ app-bloque-buster .btn.ghost[aria-pressed='true'] {
     0 0 10px rgba(255, 0, 110, 0.28),
     inset 0 0 8px rgba(255, 0, 110, 0.12);
 }
+/* ===== SNAKE (SPEC 09) =====
+   Cuarto juego real. La grilla es cuadrada (21×21), así que la pantalla CRT pasa
+   a 1:1 (la base es 4:3, como Caída la puso a 1:2). El canvas se dibuja a pantalla
+   completa; el motor centra la grilla con celdas cuadradas si el contenedor no es
+   perfectamente cuadrado. Los controles táctiles son un D-pad en cruz centrado. */
+app-snake .crt {
+  max-width: 520px; /* el gabinete abraza la pantalla cuadrada en escritorio */
+  margin-inline: auto;
+}
+app-snake .crt-screen {
+  aspect-ratio: 1 / 1; /* grilla cuadrada 21×21 */
+  max-width: 472px;
+  max-height: 80vh;
+  margin-inline: auto;
+}
+.snake-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none; /* sin scroll/zoom al jugar sobre el canvas */
+}
+/* D-pad en cruz (↑/↓/←/→): un solo bloque centrado. La base usa space-between
+   para varios clústers, así que aquí se centra el único bloque. */
+app-snake .touch-controls {
+  justify-content: center;
+}
+.touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-template-areas:
+    '. up .'
+    'left . right'
+    '. down .';
+  gap: 10px;
+  margin-inline: auto;
+}
+.touch-dpad .up {
+  grid-area: up;
+}
+.touch-dpad .left {
+  grid-area: left;
+}
+.touch-dpad .right {
+  grid-area: right;
+}
+.touch-dpad .down {
+  grid-area: down;
+}
 /* fake in-screen game */
 .game-arena {
   position: absolute; inset: 0;
