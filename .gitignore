@@ -42,7 +42,9 @@ __screenshots__/
 # Environment variables / secrets (contienen la API key de Resend)
 .env
 .env.*
+.env-*
 .env-template
+.env-local
 
 # Config de entorno generada desde .env-template (scripts/generate-environment.mjs)
 /src/environments/environment.ts
