@@ -59,3 +59,20 @@ SPEC 08 portó el tercer juego **real**, **Bloque Buster** (Arkanoid, `games/blo
 SPEC 09 añadió el cuarto juego **real**, **Snake** (`games/snake/`), construido **desde cero** (sin referencia `game.js` — solo los assets `fruits.png` + `sprites.js`) reutilizando el patrón de SPEC 05/07 (motor TS procedural aislado + componente dedicado + ruta propia + guardado en el Salón). A diferencia de SPEC 07/08, **creó una nueva fila de catálogo vía `INSERT`** (no `UPDATE`): **eliminó** el placeholder `serpentina` e insertó `snake` (ARCADE, `cover-snake`, `green`, `best` 0 / `plays` "—", `playable: true`, posición 3). También **limpió el catálogo**: los cinco placeholders no implementados restantes (`gloton`, `invasores`, `rocas`, `ranaria`, `duelo-pixel`) fueron **eliminados** de la tabla `games` y de la semilla de `games.data.ts` + `GAMES_FIXTURE`, dejando exactamente los 4 juegos implementados. Esto fija la convención de aquí en adelante: **cada juego se crea en la BD cuando se implementa** (no más placeholders sembrados). Snake come sprites de fruta de `fruits.png` en una grilla toroidal con una sola vida; sonido, obstáculos, niveles, power-ups y el recolor neón de las frutas quedan para specs futuras.
 
 Comportamiento del prototipo a preservar al portar: las rutas eran `{name, id?}` en el hash de la URL (`biblioteca` | `detalle` | `player` | `auth` | `salon`) → mapéalas a rutas de Angular. El usuario con sesión iniciada aún persiste en `localStorage` (`av_user`); las puntuaciones ahora viven en la tabla `scores` de Supabase (la vieja clave de localStorage `av_scores` quedó retirada).
+# Juegos implementados — Arcade Vault
+
+Lista de los juegos **reales y jugables** del catálogo, consultada desde la tabla `games`
+de Supabase (`playable = true`, ordenados por `position`). Son los únicos que viven en la
+base de datos: los placeholders no implementados fueron eliminados (SPEC 09).
+
+_Última consulta: 2026-10-19 · 4 juegos._
+
+| # | ID | Título | Categoría | Color | Portada | Ruta | SPEC | Mejor | Partidas |
+|---|----|--------|-----------|-------|---------|------|------|-------|----------|
+| 0 | `asteroides` | ASTEROIDES | SHOOTER | `cyan` | `cover-asteroides` | `jugar/asteroides` | SPEC 05 | 0 | — |
+| 1 | `bloque-buster` | BLOQUE BUSTER | ARCADE | `cyan` | `cover-bricks` | `jugar/bloque-buster` | SPEC 08 | 28 450 | 12.4K |
+| 2 | `caida` | CAÍDA | PUZZLE | `magenta` | `cover-tetro` | `jugar/caida` | SPEC 07 | 184 220 | 31.8K |
+| 3 | `snake` | SNAKE | ARCADE | `green` | `cover-snake` | `jugar/snake` | SPEC 09 | 0 | — |
+
+> `best` y `plays` son columnas sembradas en el catálogo (valores estáticos de muestra), no
+> se derivan de la tabla `scores`.
