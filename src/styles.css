@@ -17,6 +17,12 @@
   --line-2: rgba(255, 255, 255, 0.06);
   --pixel: "Press Start 2P", system-ui, monospace;
   --mono: "JetBrains Mono", "Courier Prime", "Courier New", monospace;
+  /* Safe-area (notch / barra inferior). Requiere viewport-fit=cover en index.html.
+     Solo los consume el layout móvil de juego (SPEC 10); en escritorio valen 0. */
+  --sai-top: env(safe-area-inset-top, 0px);
+  --sai-right: env(safe-area-inset-right, 0px);
+  --sai-bottom: env(safe-area-inset-bottom, 0px);
+  --sai-left: env(safe-area-inset-left, 0px);
 }
 * { box-sizing: border-box; }
 html, body, app-root {
@@ -758,25 +764,6 @@ app-root { position: relative; z-index: 2; display: flex; flex-direction: column
   background: rgba(0, 0, 0, 0.62);
   backdrop-filter: blur(1px);
 }
-/* Controles táctiles: solo en dispositivos táctiles o pantallas estrechas.
-   En escritorio el juego es por teclado y no se muestran. */
-.touch-controls {
-  display: none;
-  margin-top: 16px;
-  justify-content: space-between;
-  gap: 16px;
-  user-select: none;
-  -webkit-user-select: none;
-}
-@media (hover: none) and (pointer: coarse), (max-width: 760px) {
-  .touch-controls {
-    display: flex;
-  }
-}
-.touch-cluster {
-  display: flex;
-  gap: 12px;
-}
 .touch-btn {
   min-width: 56px;
   height: 56px;
@@ -958,11 +945,6 @@ app-caida .crt-screen {
   display: block;
   touch-action: none; /* sin scroll/zoom al jugar/arrastrar sobre el canvas */
 }
-/* Un solo clúster táctil (←/→): la base usa space-between para dos clústers
-   (como Caída), así que aquí se centra. */
-app-bloque-buster .touch-controls {
-  justify-content: center;
-}
 /* Botón de silencio: cuando el sonido está OFF (aria-pressed), un tinte magenta
    refuerza el texto "SONIDO: OFF" sin depender solo del color (el label ya lo
    dice). Scope app-bloque-buster para no afectar al toggle de tema de Caída, que
@@ -997,12 +979,31 @@ app-snake .crt-screen {
   display: block;
   touch-action: none; /* sin scroll/zoom al jugar sobre el canvas */
 }
-/* D-pad en cruz (↑/↓/←/→): un solo bloque centrado. La base usa space-between
-   para varios clústers, así que aquí se centra el único bloque. */
-app-snake .touch-controls {
+/* ===== SPEC 10 — Mando táctil unificado (solo móvil) =====
+   Canvas arriba, este mando abajo (como un gamepad): la cruceta a un lado y
+   hasta 2 botones de acción al otro, para jugar con los dos pulgares. Mismo
+   mando en los 4 juegos; cada uno solo renderiza las teclas/botones que usa.
+   Reutiliza .touch-btn (tamaño táctil, :active, :focus-visible y
+   prefers-reduced-motion ya definidos arriba). Oculto por defecto: el
+   breakpoint móvil del paso 3 lo muestra; el marcado por juego llega en el
+   paso 5. */
+.av-mobile-pad {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Juegos sin botones de acción (Snake, Bloque Buster): se centra la cruceta
+   en lugar de empujarla a un lado. */
+.av-mobile-pad.solo {
   justify-content: center;
 }
-.touch-dpad {
+/* Cruceta en cruz centrada. Las direcciones que un juego no usa simplemente no
+   se renderizan en el marcado. */
+.pad-dpad {
   display: grid;
   grid-template-columns: repeat(3, auto);
   grid-template-areas:
@@ -1010,19 +1011,103 @@ app-snake .touch-controls {
     'left . right'
     '. down .';
   gap: 10px;
-  margin-inline: auto;
 }
-.touch-dpad .up {
+.pad-dpad .up {
   grid-area: up;
 }
-.touch-dpad .left {
+.pad-dpad .down {
+  grid-area: down;
+}
+.pad-dpad .left {
   grid-area: left;
 }
-.touch-dpad .right {
+.pad-dpad .right {
   grid-area: right;
 }
-.touch-dpad .down {
-  grid-area: down;
+/* Grupo de 0–2 botones de acción (A neutro / B con el acento .fire existente). */
+.pad-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* ===== SPEC 10 — Layout de juego en móvil =====
+   Solo en móvil (puntero grueso o ancho ≤760px): la vista del reproductor se
+   apila en columna [HUD compacto] → [CRT] → [mando] → [barra de pie] (el orden
+   sale del DOM; mando y barra son hermanos de .crt, cableados en los pasos 4–5).
+   Se acota la altura de la pantalla con dvh para que el mando y la barra quepan
+   sin scroll en los 3 aspect-ratios (4:3, 1:2 de Caída, 1:1 de Snake); el motor
+   ya centra el tablero con celdas cuadradas si se estrecha. Escritorio intacto:
+   todo vive dentro de esta media query. */
+@media (hover: none) and (pointer: coarse), (max-width: 760px) {
+  .av-player {
+    margin-top: 16px;
+  }
+  .player-hud {
+    padding: 10px 12px;
+    gap: 10px 16px;
+    margin-bottom: 12px;
+  }
+  .hud-stat .v {
+    font-size: 13px;
+  }
+  /* Acotar la pantalla para reservar sitio al mando + barra de pie. Se igualan
+     app-caida/app-snake .crt-screen (que fijan max-height: 80vh) y, al ir este
+     bloque después en el archivo, gana el empate. Valor afinable en el paso 7
+     (prueba en dispositivo real). */
+  app-asteroids .crt-screen,
+  app-caida .crt-screen,
+  app-bloque-buster .crt-screen,
+  app-snake .crt-screen {
+    max-height: 48dvh;
+  }
+  /* El mando (marcado por juego en el paso 5) pasa a visible; nace oculto en el
+     paso 2. Su contenido aún no existe, así que todavía no se ve nada nuevo. */
+  .av-mobile-pad {
+    display: flex;
+  }
+}
+/* ===== SPEC 10 — Barra de pie + reinicio táctil (solo móvil) =====
+   La barra de pie recoge las acciones secundarias que en escritorio viven en
+   .hud-actions: PAUSA/REANUDAR, SALIR y los toggles del juego (SKIN; SONIDO en
+   Bloque Buster). Nace oculta; el breakpoint móvil la muestra y, a la vez,
+   oculta .hud-actions. El botón «JUGAR DE NUEVO» (.av-restart) del panel de fin
+   y el texto «PULSA ESPACIO» (.save-hint) también se alternan por móvil. En
+   escritorio nada de esto aparece. */
+.av-mobile-bar {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 10px calc(12px + var(--sai-bottom));
+  border-top: 1px solid var(--line);
+}
+.av-restart {
+  display: none;
+}
+@media (hover: none) and (pointer: coarse), (max-width: 760px) {
+  .player-hud .hud-actions {
+    display: none;
+  }
+  .av-mobile-bar {
+    display: flex;
+  }
+  .av-save .save-hint {
+    display: none;
+  }
+  .av-restart {
+    display: inline-flex;
+  }
+}
+/* ===== SPEC 10 — Objetivos táctiles (solo móvil) =====
+   Suelo de 44px en los controles interactivos comunes para cumplir el tamaño
+   táctil mínimo; solo en móvil, escritorio intacto. */
+@media (hover: none) and (pointer: coarse), (max-width: 760px) {
+  .btn,
+  .skin-dropdown {
+    min-height: 44px;
+  }
 }
 /* fake in-screen game */
 .game-arena {

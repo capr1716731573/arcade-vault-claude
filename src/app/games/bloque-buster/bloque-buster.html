@@ -45,37 +45,64 @@
   <div class="crt-screen">
     <canvas #canvas class="bloque-buster-canvas" aria-label="Pantalla de Bloque Buster"></canvas>
   </div>
-  <div class="touch-controls">
-    <div class="touch-cluster">
-      <button
-        type="button"
-        class="touch-btn"
-        aria-label="Mover a la izquierda"
-        (pointerdown)="press('left', true, $event)"
-        (pointerup)="press('left', false, $event)"
-        (pointerleave)="press('left', false, $event)"
-        (pointercancel)="press('left', false, $event)"
-      >
-        ◀
-      </button>
-      <button
-        type="button"
-        class="touch-btn"
-        aria-label="Mover a la derecha"
-        (pointerdown)="press('right', true, $event)"
-        (pointerup)="press('right', false, $event)"
-        (pointerleave)="press('right', false, $event)"
-        (pointercancel)="press('right', false, $event)"
-      >
-        ▶
-      </button>
-    </div>
-  </div>
   <div class="crt-bottom">
     <span class="led">SEÑAL OK</span>
     <span>BLOQUE BUSTER · CRT-83 · 60 HZ</span>
     <span>CARGA · 1MB</span>
   </div>
+</div>
+<div class="av-mobile-pad solo">
+  <div class="pad-dpad">
+    <button
+      type="button"
+      class="touch-btn left"
+      aria-label="Mover a la izquierda"
+      (pointerdown)="press('left', true, $event)"
+      (pointerup)="press('left', false, $event)"
+      (pointerleave)="press('left', false, $event)"
+      (pointercancel)="press('left', false, $event)"
+    >
+      ◀
+    </button>
+    <button
+      type="button"
+      class="touch-btn right"
+      aria-label="Mover a la derecha"
+      (pointerdown)="press('right', true, $event)"
+      (pointerup)="press('right', false, $event)"
+      (pointerleave)="press('right', false, $event)"
+      (pointercancel)="press('right', false, $event)"
+    >
+      ▶
+    </button>
+  </div>
+</div>
+<div class="av-mobile-bar">
+  <button type="button" class="btn yellow" (click)="togglePause()">
+    {{ paused() ? 'REANUDAR' : 'PAUSA' }}
+  </button>
+  <label class="skin-select">
+    <span class="skin-select-label" aria-hidden="true">SKIN</span>
+    <select
+      class="skin-dropdown"
+      aria-label="Skin del juego"
+      (change)="selectSkin($any($event.target).value)"
+    >
+      @for (opt of skinOptions; track opt.id) {
+        <option [value]="opt.id" [selected]="skin() === opt.id">{{ opt.label }}</option>
+      }
+    </select>
+  </label>
+  <button
+    type="button"
+    class="btn ghost"
+    aria-label="Silenciar efectos de sonido"
+    [attr.aria-pressed]="muted()"
+    (click)="toggleMuted()"
+  >
+    {{ muted() ? 'SONIDO: OFF' : 'SONIDO: ON' }}
+  </button>
+  <a class="btn ghost" routerLink="/juego/bloque-buster">SALIR</a>
 </div>
 @if (phase() === 'gameover' || phase() === 'win') {
   <div class="av-save">
@@ -109,6 +136,9 @@
     }
     <div class="save-hint mono">O PULSA «ESPACIO» EN LA PANTALLA PARA JUGAR DE NUEVO</div>
     <div class="save-actions">
+      <button type="button" class="btn yellow av-restart" (click)="restartGame()">
+        JUGAR DE NUEVO
+      </button>
       <a class="btn magenta" routerLink="/">VOLVER AL VAULT</a>
     </div>
   </div>

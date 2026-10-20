@@ -40,72 +40,90 @@
   <div class="crt-screen">
     <canvas #canvas class="caida-canvas" aria-label="Tablero de Caída"></canvas>
   </div>
-  <div class="touch-controls">
-    <div class="touch-cluster">
-      <button
-        type="button"
-        class="touch-btn"
-        aria-label="Mover a la izquierda"
-        (pointerdown)="press('left', true, $event)"
-        (pointerup)="press('left', false, $event)"
-        (pointerleave)="press('left', false, $event)"
-        (pointercancel)="press('left', false, $event)"
-      >
-        ◀
-      </button>
-      <button
-        type="button"
-        class="touch-btn"
-        aria-label="Mover a la derecha"
-        (pointerdown)="press('right', true, $event)"
-        (pointerup)="press('right', false, $event)"
-        (pointerleave)="press('right', false, $event)"
-        (pointercancel)="press('right', false, $event)"
-      >
-        ▶
-      </button>
-    </div>
-    <div class="touch-cluster">
-      <button
-        type="button"
-        class="touch-btn"
-        aria-label="Rotar"
-        (pointerdown)="press('rotate', true, $event)"
-        (pointerup)="press('rotate', false, $event)"
-        (pointerleave)="press('rotate', false, $event)"
-        (pointercancel)="press('rotate', false, $event)"
-      >
-        ⟳
-      </button>
-      <button
-        type="button"
-        class="touch-btn"
-        aria-label="Bajar"
-        (pointerdown)="press('soft', true, $event)"
-        (pointerup)="press('soft', false, $event)"
-        (pointerleave)="press('soft', false, $event)"
-        (pointercancel)="press('soft', false, $event)"
-      >
-        ▼
-      </button>
-      <button
-        type="button"
-        class="touch-btn fire"
-        aria-label="Caída dura"
-        (pointerdown)="press('hard', true, $event)"
-        (pointerup)="press('hard', false, $event)"
-        (pointerleave)="press('hard', false, $event)"
-        (pointercancel)="press('hard', false, $event)"
-      >
-        ⤓ CAÍDA
-      </button>
-    </div>
-  </div>
   <div class="crt-bottom">
     <span class="led">SEÑAL OK</span>
     <span>CAÍDA · CRT-83 · 60 HZ</span>
     <span>CARGA · 1MB</span>
   </div>
+</div>
+<div class="av-mobile-pad">
+  <div class="pad-dpad">
+    <button
+      type="button"
+      class="touch-btn left"
+      aria-label="Mover a la izquierda"
+      (pointerdown)="press('left', true, $event)"
+      (pointerup)="press('left', false, $event)"
+      (pointerleave)="press('left', false, $event)"
+      (pointercancel)="press('left', false, $event)"
+    >
+      ◀
+    </button>
+    <button
+      type="button"
+      class="touch-btn right"
+      aria-label="Mover a la derecha"
+      (pointerdown)="press('right', true, $event)"
+      (pointerup)="press('right', false, $event)"
+      (pointerleave)="press('right', false, $event)"
+      (pointercancel)="press('right', false, $event)"
+    >
+      ▶
+    </button>
+    <button
+      type="button"
+      class="touch-btn down"
+      aria-label="Bajar"
+      (pointerdown)="press('soft', true, $event)"
+      (pointerup)="press('soft', false, $event)"
+      (pointerleave)="press('soft', false, $event)"
+      (pointercancel)="press('soft', false, $event)"
+    >
+      ▼
+    </button>
+  </div>
+  <div class="pad-actions">
+    <button
+      type="button"
+      class="touch-btn"
+      aria-label="Rotar"
+      (pointerdown)="press('rotate', true, $event)"
+      (pointerup)="press('rotate', false, $event)"
+      (pointerleave)="press('rotate', false, $event)"
+      (pointercancel)="press('rotate', false, $event)"
+    >
+      ⟳
+    </button>
+    <button
+      type="button"
+      class="touch-btn fire"
+      aria-label="Caída dura"
+      (pointerdown)="press('hard', true, $event)"
+      (pointerup)="press('hard', false, $event)"
+      (pointerleave)="press('hard', false, $event)"
+      (pointercancel)="press('hard', false, $event)"
+    >
+      ⤓ CAÍDA
+    </button>
+  </div>
+</div>
+<div class="av-mobile-bar">
+  <button type="button" class="btn yellow" (click)="togglePause()">
+    {{ paused() ? 'REANUDAR' : 'PAUSA' }}
+  </button>
+  <label class="skin-select">
+    <span class="skin-select-label" aria-hidden="true">SKIN</span>
+    <select
+      class="skin-dropdown"
+      aria-label="Skin del juego"
+      (change)="selectSkin($any($event.target).value)"
+    >
+      @for (opt of skinOptions; track opt.id) {
+        <option [value]="opt.id" [selected]="skin() === opt.id">{{ opt.label }}</option>
+      }
+    </select>
+  </label>
+  <a class="btn ghost" routerLink="/juego/caida">SALIR</a>
 </div>
 @if (phase() === 'gameover') {
   <div class="av-save">
@@ -137,6 +155,9 @@
     }
     <div class="save-hint mono">O PULSA «ESPACIO» EN LA PANTALLA PARA JUGAR DE NUEVO</div>
     <div class="save-actions">
+      <button type="button" class="btn yellow av-restart" (click)="restartGame()">
+        JUGAR DE NUEVO
+      </button>
       <a class="btn magenta" routerLink="/">VOLVER AL VAULT</a>
     </div>
   </div>

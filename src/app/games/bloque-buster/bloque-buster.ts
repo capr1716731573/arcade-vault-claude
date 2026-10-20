@@ -138,6 +138,10 @@ export class BloqueBuster implements OnDestroy {
       return 'clasico';
     }
   }
+  protected restartGame() {
+    this.engine?.restart();
+    this.paused.set(false);
+  }
   protected press(action: TouchAction, pressed: boolean, e: Event) {
     e.preventDefault();
     this.engine?.setInput(action, pressed);
