@@ -1,6 +1,6 @@
 # SPEC 10 — Jugabilidad móvil táctil (canvas arriba + mando unificado) + auditoría responsive
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05 (Asteroides: patrón motor TS + componente + marco CRT/táctil/guardado en `styles.css`), SPEC 07 (Caída), SPEC 08 (Bloque Buster), SPEC 09 (Snake)
 > **Fecha:** 2026-10-20
 > **Objetivo:** Rehacer **solo en móvil** la pantalla de juego de los 4 juegos (canvas arriba, mando táctil unificado abajo, barra de pie con pausa/salir y botón «JUGAR DE NUEVO» para reiniciar sin teclado) y auditar el resto de la app a 360px, sin tocar la jugabilidad de los motores ni el escritorio.

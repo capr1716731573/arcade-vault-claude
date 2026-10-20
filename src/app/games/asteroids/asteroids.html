@@ -76,7 +76,9 @@
       (pointerleave)="press('thrust', false, $event)"
       (pointercancel)="press('thrust', false, $event)"
     >
-      ▲
+      <svg class="pad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4 L20 16 L4 16 Z" />
+      </svg>
     </button>
     <button
       type="button"
@@ -87,7 +89,9 @@
       (pointerleave)="press('left', false, $event)"
       (pointercancel)="press('left', false, $event)"
     >
-      ◀
+      <svg class="pad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M16 4 L16 20 L4 12 Z" />
+      </svg>
     </button>
     <button
       type="button"
@@ -98,20 +102,25 @@
       (pointerleave)="press('right', false, $event)"
       (pointercancel)="press('right', false, $event)"
     >
-      ▶
+      <svg class="pad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 4 L20 12 L8 20 Z" />
+      </svg>
     </button>
+    <span class="pad-hub" aria-hidden="true"><span class="pad-hub-gem"></span></span>
   </div>
   <div class="pad-actions">
     <button
       type="button"
-      class="touch-btn fire"
-      aria-label="Disparar"
+      class="pad-ab a"
+      aria-label="FUEGO"
+      title="FUEGO"
       (pointerdown)="press('shoot', true, $event)"
       (pointerup)="press('shoot', false, $event)"
       (pointerleave)="press('shoot', false, $event)"
       (pointercancel)="press('shoot', false, $event)"
     >
-      ● FUEGO
+      <span class="pad-ab-ring" aria-hidden="true"></span>
+      <span class="pad-ab-letter">A</span>
     </button>
   </div>
 </div>

@@ -57,7 +57,9 @@
       (pointerleave)="press('left', false, $event)"
       (pointercancel)="press('left', false, $event)"
     >
-      ◀
+      <svg class="pad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M16 4 L16 20 L4 12 Z" />
+      </svg>
     </button>
     <button
       type="button"
@@ -68,7 +70,9 @@
       (pointerleave)="press('right', false, $event)"
       (pointercancel)="press('right', false, $event)"
     >
-      ▶
+      <svg class="pad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 4 L20 12 L8 20 Z" />
+      </svg>
     </button>
     <button
       type="button"
@@ -79,31 +83,38 @@
       (pointerleave)="press('soft', false, $event)"
       (pointercancel)="press('soft', false, $event)"
     >
-      ▼
+      <svg class="pad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 8 L20 8 L12 20 Z" />
+      </svg>
     </button>
+    <span class="pad-hub" aria-hidden="true"><span class="pad-hub-gem"></span></span>
   </div>
   <div class="pad-actions">
     <button
       type="button"
-      class="touch-btn"
-      aria-label="Rotar"
+      class="pad-ab a"
+      aria-label="ROTAR"
+      title="ROTAR"
       (pointerdown)="press('rotate', true, $event)"
       (pointerup)="press('rotate', false, $event)"
       (pointerleave)="press('rotate', false, $event)"
       (pointercancel)="press('rotate', false, $event)"
     >
-      ⟳
+      <span class="pad-ab-ring" aria-hidden="true"></span>
+      <span class="pad-ab-letter">A</span>
     </button>
     <button
       type="button"
-      class="touch-btn fire"
-      aria-label="Caída dura"
+      class="pad-ab b"
+      aria-label="CAÍDA"
+      title="CAÍDA"
       (pointerdown)="press('hard', true, $event)"
       (pointerup)="press('hard', false, $event)"
       (pointerleave)="press('hard', false, $event)"
       (pointercancel)="press('hard', false, $event)"
     >
-      ⤓ CAÍDA
+      <span class="pad-ab-ring" aria-hidden="true"></span>
+      <span class="pad-ab-letter">B</span>
     </button>
   </div>
 </div>
