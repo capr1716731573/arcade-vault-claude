@@ -121,6 +121,7 @@ Solo sobre el juego indicado:
 4. **Valida con `npm run build`.** **No** ejecutes la suite Vitest completa (`npx ng test` sin filtro):
    la memoria del repo registra que provocó OOM y mató la sesión. Como mucho, corre **un único**
    archivo spec si es imprescindible (`npx ng test --include=... --watch=false`).
+5. Ocupamonos asegurarnos que los skins sean a travez de un selector y de ahi se despliegue una lista con los selectores de temas para el juego. No lo hagas a travez de botones sino a travez de select para seleccionar el tema.
 
 ### Caso especial Caída
 

@@ -36,6 +36,67 @@ export const BASE_MS = 140;
 export const SPEED_STEP = 4;
 /** Intervalo mínimo entre pasos (tope de velocidad), en ms. */
 export const MIN_MS = 60;
+// ── Skins (paletas dark-only; el componente persiste la selección por juego) ──
+export type GameSkin = 'clasico' | 'neon' | 'retro';
+/** Colores que el motor usa para dibujar, por skin. Todos legibles sobre oscuro. */
+export interface SnakePalette {
+  bg: string; // fondo del tablero
+  grid: string; // líneas de la rejilla
+  head: string; // relleno de la cabeza de la serpiente
+  body: string; // relleno del cuerpo de la serpiente
+  snakeGlow: string; // color del resplandor de los segmentos
+  fruitMarker: string; // relleno del marcador de respaldo de la fruta (mientras carga el sprite)
+  fruitGlow: string; // color del resplandor del marcador de respaldo
+  overlayBg: string; // velo del overlay PAUSA/GAME OVER
+  overlayText: string; // título del overlay
+  overlaySub: string; // subtítulo del overlay
+  glow: number; // shadowBlur base del cuerpo (0 = vectores nítidos sin glow); la cabeza suma +6
+}
+/** Las 3 paletas, todas sobre fondo oscuro (no hay modo claro). */
+export const SKIN_PALETTES: Record<GameSkin, SnakePalette> = {
+  // Arcade auténtico: serpiente verde sobria sobre negro, sin resplandor, marcador de fruta rojo cálido.
+  clasico: {
+    bg: '#000000',
+    grid: 'rgba(255,255,255,0.06)',
+    head: '#e8ffe8',
+    body: '#58d08a',
+    snakeGlow: 'rgba(88,208,138,0.5)',
+    fruitMarker: '#ff6b6b',
+    fruitGlow: 'rgba(255,107,107,0.7)',
+    overlayBg: 'rgba(0,0,0,0.78)',
+    overlayText: '#ffffff',
+    overlaySub: 'rgba(255,255,255,0.65)',
+    glow: 0,
+  },
+  // Neón/CRT del Vault: serpiente verde brillante con resplandor, marcador de fruta magenta.
+  neon: {
+    bg: '#06060f',
+    grid: 'rgba(255,255,255,0.05)',
+    head: '#9dffc9',
+    body: '#2fe6a0',
+    snakeGlow: 'rgba(57,255,150,0.65)',
+    fruitMarker: '#ff4ac4',
+    fruitGlow: 'rgba(255,74,196,0.8)',
+    overlayBg: 'rgba(6,6,15,0.78)',
+    overlayText: '#ffffff',
+    overlaySub: 'rgba(255,255,255,0.65)',
+    glow: 10,
+  },
+  // Monocromo CRT: fósforo verde legible sobre un negro verdoso, con bloom tenue.
+  retro: {
+    bg: '#02100a',
+    grid: 'rgba(59,255,126,0.12)',
+    head: '#c7ffd8',
+    body: '#3bff7e',
+    snakeGlow: 'rgba(59,255,126,0.5)',
+    fruitMarker: '#9dffb8',
+    fruitGlow: 'rgba(157,255,184,0.7)',
+    overlayBg: 'rgba(2,16,10,0.8)',
+    overlayText: '#3bff7e',
+    overlaySub: 'rgba(59,255,126,0.6)',
+    glow: 7,
+  },
+};
 // ── Tipos públicos ────────────────────────────────────────────────────────────
 export type SnakePhase = 'playing' | 'gameover'; // una sola vida
 export interface SnakeState {
@@ -104,6 +165,7 @@ export class SnakeEngine {
   private stepAccum = 0;
   private paused = false;
   private spaceLatched = false;
+  private skin: GameSkin = 'clasico';
   // Ciclo de vida
   private rafId: number | null = null;
   private lastTime: number | null = null;
@@ -169,6 +231,11 @@ export class SnakeEngine {
   /** Controles táctiles: giran igual que el teclado (ignoran la reversa 180°). */
   setInput(action: TouchAction, pressed: boolean) {
     if (pressed) this.turn(DIR_FROM_ACTION[action]);
+  }
+  /** Cambia el skin (clasico/neon/retro); si está pausado/parado, redibuja ya. */
+  setSkin(skin: GameSkin) {
+    this.skin = skin;
+    if (!this.running) this.draw();
   }
   /** Cancela el RAF, quita listeners de teclado y el observador de tamaño. */
   destroy() {
@@ -324,22 +391,35 @@ export class SnakeEngine {
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   }
-  private drawSegment(ctx: CanvasRenderingContext2D, c: Cell, cell: number, head: boolean) {
+  /** Paleta activa (colores de dibujo del skin actual). */
+  private get palette(): SnakePalette {
+    return SKIN_PALETTES[this.skin];
+  }
+  private drawSegment(
+    ctx: CanvasRenderingContext2D,
+    c: Cell,
+    cell: number,
+    head: boolean,
+    p: SnakePalette,
+  ) {
     const pad = Math.max(1, cell * 0.08);
     const s = cell - pad * 2;
     const r = Math.min(6, s * 0.3);
     ctx.save();
-    ctx.shadowBlur = head ? 16 : 10;
-    ctx.shadowColor = 'rgba(57,255,150,0.65)';
-    ctx.fillStyle = head ? '#9dffc9' : '#2fe6a0';
+    if (p.glow) {
+      ctx.shadowBlur = head ? p.glow + 6 : p.glow;
+      ctx.shadowColor = p.snakeGlow;
+    }
+    ctx.fillStyle = head ? p.head : p.body;
     this.roundRect(ctx, c.x * cell + pad, c.y * cell + pad, s, s, r);
     ctx.fill();
     ctx.restore();
   }
-  private drawFruit(ctx: CanvasRenderingContext2D, fruit: Fruit, cell: number) {
+  private drawFruit(ctx: CanvasRenderingContext2D, fruit: Fruit, cell: number, p: SnakePalette) {
     const sxc = fruit.x * cell;
     const syc = fruit.y * cell;
     if (this.imgReady && this.img) {
+      // El sprite de la fruta se dibuja tal cual (el skin no recolorea la imagen).
       const sp = FRUIT_SPRITES[fruit.name];
       const inner = cell * 0.9;
       const scale = Math.min(inner / sp.w, inner / sp.h);
@@ -347,34 +427,37 @@ export class SnakeEngine {
       const dh = sp.h * scale;
       ctx.drawImage(this.img, sp.x, sp.y, sp.w, sp.h, sxc + (cell - dw) / 2, syc + (cell - dh) / 2, dw, dh);
     } else {
-      // Marcador neón de reserva mientras carga la imagen (la lógica no depende de ella).
+      // Marcador de reserva (según skin) mientras carga la imagen; la lógica no depende de ella.
       ctx.save();
-      ctx.shadowBlur = 14;
-      ctx.shadowColor = 'rgba(255,74,196,0.8)';
-      ctx.fillStyle = '#ff4ac4';
+      if (p.glow) {
+        ctx.shadowBlur = p.glow + 4;
+        ctx.shadowColor = p.fruitGlow;
+      }
+      ctx.fillStyle = p.fruitMarker;
       ctx.beginPath();
       ctx.arc(sxc + cell / 2, syc + cell / 2, cell * 0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
   }
-  private drawOverlay(title: string, sub: string) {
+  private drawOverlay(title: string, sub: string, p: SnakePalette) {
     const ctx = this.ctx!;
     const s = Math.min(1, Math.max(0.5, this.W / 400));
-    ctx.fillStyle = 'rgba(6,6,15,0.78)';
+    ctx.fillStyle = p.overlayBg;
     ctx.fillRect(0, 0, this.W, this.H);
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = p.overlayText;
     ctx.font = `bold ${30 * s}px monospace`;
     ctx.fillText(title, this.W / 2, this.H / 2 - 10 * s);
     ctx.font = `${12 * s}px monospace`;
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.fillStyle = p.overlaySub;
     ctx.fillText(sub, this.W / 2, this.H / 2 + 20 * s);
   }
   private draw() {
     const ctx = this.ctx;
     if (!ctx) return;
-    ctx.fillStyle = '#06060f';
+    const p = this.palette;
+    ctx.fillStyle = p.bg;
     ctx.fillRect(0, 0, this.W, this.H);
     const cell = Math.min(this.W, this.H) / GRID;
     const ox = (this.W - cell * GRID) / 2;
@@ -382,7 +465,7 @@ export class SnakeEngine {
     ctx.save();
     ctx.translate(ox, oy);
     // Rejilla
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = p.grid;
     ctx.lineWidth = 1;
     for (let i = 1; i < GRID; i++) {
       ctx.beginPath();
@@ -395,14 +478,14 @@ export class SnakeEngine {
       ctx.stroke();
     }
     // Fruta
-    if (this.fruit) this.drawFruit(ctx, this.fruit, cell);
+    if (this.fruit) this.drawFruit(ctx, this.fruit, cell, p);
     // Serpiente (de la cola a la cabeza, para que la cabeza quede encima)
     for (let i = this.snake.length - 1; i >= 0; i--)
-      this.drawSegment(ctx, this.snake[i], cell, i === 0);
+      this.drawSegment(ctx, this.snake[i], cell, i === 0, p);
     ctx.restore();
     if (this.phase === 'gameover')
-      this.drawOverlay('GAME OVER', `PUNTOS: ${this.score}  —  ESPACIO REINICIA`);
-    else if (this.paused) this.drawOverlay('EN PAUSA', 'PULSA P PARA REANUDAR');
+      this.drawOverlay('GAME OVER', `PUNTOS: ${this.score}  —  ESPACIO REINICIA`, p);
+    else if (this.paused) this.drawOverlay('EN PAUSA', 'PULSA P PARA REANUDAR', p);
   }
   // ── Bucle principal ────────────────────────────────────────────────────────────
   private readonly loop = (ts: number) => {

@@ -18,14 +18,18 @@
     </div>
   </div>
   <div class="hud-actions">
-    <button
-      type="button"
-      class="btn ghost"
-      [attr.aria-pressed]="boardTheme() === 'light'"
-      (click)="toggleTheme()"
-    >
-      {{ boardTheme() === 'dark' ? 'TEMA CLARO' : 'TEMA OSCURO' }}
-    </button>
+    <label class="skin-select">
+      <span class="skin-select-label" aria-hidden="true">SKIN</span>
+      <select
+        class="skin-dropdown"
+        aria-label="Skin del juego"
+        (change)="selectSkin($any($event.target).value)"
+      >
+        @for (opt of skinOptions; track opt.id) {
+          <option [value]="opt.id" [selected]="skin() === opt.id">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
     <button type="button" class="btn yellow" (click)="togglePause()">
       {{ paused() ? 'REANUDAR' : 'PAUSA' }}
     </button>

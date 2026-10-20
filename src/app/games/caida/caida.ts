@@ -12,9 +12,14 @@ import { RouterLink } from '@angular/router';
 import { EsNumberPipe } from '../../shared/es-number.pipe';
 import { ScoresService } from '../../services/scores.service';
 import { SessionService } from '../../services/session.service';
-import { CaidaEngine, type CaidaPhase, type CaidaState, type TouchAction } from './caida-engine';
-type BoardTheme = 'dark' | 'light';
-const THEME_KEY = 'av_caida_theme';
+import {
+  CaidaEngine,
+  type CaidaPhase,
+  type CaidaState,
+  type GameSkin,
+  type TouchAction,
+} from './caida-engine';
+const SKIN_KEY = 'av_caida_skin';
 @Component({
   selector: 'app-caida',
   imports: [EsNumberPipe, RouterLink],
@@ -36,7 +41,13 @@ export class Caida implements OnDestroy {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
-  protected readonly boardTheme = signal<BoardTheme>('dark');
+  // Skin del juego (dark-only): clasico (default), neon, retro. Persistido por juego.
+  protected readonly skin = signal<GameSkin>('clasico');
+  protected readonly skinOptions: readonly { id: GameSkin; label: string }[] = [
+    { id: 'clasico', label: 'CLÁSICO' },
+    { id: 'neon', label: 'NEÓN' },
+    { id: 'retro', label: 'RETRO' },
+  ];
   private engine: CaidaEngine | null = null;
   private pauseKeyHandler: ((e: KeyboardEvent) => void) | null = null;
   constructor() {
@@ -52,11 +63,11 @@ export class Caida implements OnDestroy {
           nextCanvas,
         });
         this.engine = engine;
-        // Restaura el tema del tablero guardado (preferencia por jugador, solo-navegador).
-        const stored = this.readStoredTheme();
-        if (stored) {
-          this.zone.run(() => this.boardTheme.set(stored));
-          engine.setBoardTheme(stored);
+        // Restaura el skin guardado (preferencia por juego, solo-navegador).
+        const storedSkin = this.readStoredSkin();
+        if (storedSkin) {
+          this.zone.run(() => this.skin.set(storedSkin));
+          engine.setSkin(storedSkin);
         }
         engine.start();
         const handler = (e: KeyboardEvent) => {
@@ -96,20 +107,20 @@ export class Caida implements OnDestroy {
     if (next) engine.pause();
     else engine.resume();
   }
-  protected toggleTheme() {
-    const next: BoardTheme = this.boardTheme() === 'dark' ? 'light' : 'dark';
-    this.boardTheme.set(next);
-    this.engine?.setBoardTheme(next);
+  protected selectSkin(skin: GameSkin) {
+    if (skin === this.skin()) return;
+    this.skin.set(skin);
+    this.engine?.setSkin(skin);
     try {
-      localStorage.setItem(THEME_KEY, next);
+      localStorage.setItem(SKIN_KEY, skin);
     } catch {
-      /* localStorage no disponible (modo privado/SSR): el tema sigue en memoria. */
+      /* localStorage no disponible (modo privado/SSR): el skin sigue en memoria. */
     }
   }
-  private readStoredTheme(): BoardTheme | null {
+  private readStoredSkin(): GameSkin | null {
     try {
-      const v = localStorage.getItem(THEME_KEY);
-      return v === 'light' || v === 'dark' ? v : null;
+      const v = localStorage.getItem(SKIN_KEY);
+      return v === 'clasico' || v === 'neon' || v === 'retro' ? v : null;
     } catch {
       return null;
     }

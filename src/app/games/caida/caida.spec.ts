@@ -68,17 +68,21 @@ describe('Caida (componente)', () => {
     expect(comp.paused()).toBe(false);
     expect(fake.resume).toHaveBeenCalledTimes(1);
   });
-  it('toggleTheme alterna el tema del tablero, avisa al motor y lo persiste', () => {
+  it('selectSkin cambia el skin, avisa al motor y lo persiste (av_caida_skin)', () => {
     const comp = TestBed.createComponent(Caida).componentInstance as any;
-    const fake = { setBoardTheme: vi.fn(), destroy: vi.fn() };
+    const fake = { setSkin: vi.fn(), destroy: vi.fn() };
     comp.engine = fake;
-    expect(comp.boardTheme()).toBe('dark');
-    comp.toggleTheme();
-    expect(comp.boardTheme()).toBe('light');
-    expect(fake.setBoardTheme).toHaveBeenLastCalledWith('light');
-    expect(localStorage.getItem('av_caida_theme')).toBe('light');
-    comp.toggleTheme();
-    expect(comp.boardTheme()).toBe('dark');
-    expect(localStorage.getItem('av_caida_theme')).toBe('dark');
+    expect(comp.skin()).toBe('clasico');
+    comp.selectSkin('neon');
+    expect(comp.skin()).toBe('neon');
+    expect(fake.setSkin).toHaveBeenLastCalledWith('neon');
+    expect(localStorage.getItem('av_caida_skin')).toBe('neon');
+    comp.selectSkin('retro');
+    expect(comp.skin()).toBe('retro');
+    expect(localStorage.getItem('av_caida_skin')).toBe('retro');
+    // Reseleccionar el mismo skin no vuelve a llamar al motor.
+    fake.setSkin.mockClear();
+    comp.selectSkin('retro');
+    expect(fake.setSkin).not.toHaveBeenCalled();
   });
 });

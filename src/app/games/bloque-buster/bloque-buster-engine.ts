@@ -49,6 +49,79 @@ export const BLOCK_NEON: Record<string, string> = {
   green: '#39ff14',
   gray: '#aab2d0',
 };
+// ── Skins (paletas dark-only; el componente persiste la selección por juego) ──
+export type GameSkin = 'clasico' | 'neon' | 'retro';
+/** Colores que el motor usa para dibujar, por skin. Todos legibles sobre oscuro. */
+export interface BloqueBusterPalette {
+  bg: string; // fondo del campo
+  paddle: string; // barra del jugador
+  ball: string; // núcleo de la bola
+  ballGlow: string; // halo de la bola (shadowColor)
+  blockShine: string; // brillo superior de cada bloque
+  blocks: Record<string, string>; // color del bloque por nombre lógico
+  overlayBg: string; // velo del overlay (pausa/gameover/win)
+  overlayTitle: string; // título del overlay (y color del resplandor del título)
+  overlaySub: string; // subtítulo del overlay
+  glow: number; // shadowBlur del resplandor (0 = vectores nítidos sin glow)
+}
+/** Las 3 paletas, todas sobre fondo oscuro (no hay modo claro). */
+export const SKIN_PALETTES: Record<GameSkin, BloqueBusterPalette> = {
+  // Arcade auténtico: campo negro, bloques en colores sólidos, paleta plateada, sin glow.
+  clasico: {
+    bg: '#06060a',
+    paddle: '#d6e0f5',
+    ball: '#ffffff',
+    ballGlow: '#ffffff',
+    blockShine: 'rgba(255,255,255,0.3)',
+    blocks: {
+      red: '#f2514e',
+      yellow: '#f2c14e',
+      cyan: '#4ec9f2',
+      magenta: '#c86cf0',
+      hotpink: '#f26ca8',
+      green: '#5fd24e',
+      gray: '#c3ccd9',
+    },
+    overlayBg: 'rgba(0,0,0,0.72)',
+    overlayTitle: '#ffffff',
+    overlaySub: 'rgba(255,255,255,0.68)',
+    glow: 0,
+  },
+  // Neón/CRT del Vault: el look actual (bloques neón, paleta y bola cian con resplandor).
+  neon: {
+    bg: '#06060f',
+    paddle: '#22d3ee',
+    ball: '#ffffff',
+    ballGlow: '#eafcff',
+    blockShine: 'rgba(255,255,255,0.22)',
+    blocks: BLOCK_NEON,
+    overlayBg: 'rgba(4,4,15,0.72)',
+    overlayTitle: '#eafcff',
+    overlaySub: 'rgba(234,252,255,0.72)',
+    glow: 12,
+  },
+  // Monocromo CRT: fósforo verde en gradación de brillos distinguibles, con bloom tenue.
+  retro: {
+    bg: '#02100a',
+    paddle: '#3bff7e',
+    ball: '#d7ffe4',
+    ballGlow: '#3bff7e',
+    blockShine: 'rgba(199,255,216,0.26)',
+    blocks: {
+      red: '#1c7a43',
+      yellow: '#2aa65a',
+      cyan: '#39d672',
+      magenta: '#5bf294',
+      hotpink: '#86ffb4',
+      green: '#b7ffcf',
+      gray: '#2f9c5d',
+    },
+    overlayBg: 'rgba(2,16,10,0.75)',
+    overlayTitle: '#9dffb8',
+    overlaySub: 'rgba(59,255,126,0.62)',
+    glow: 7,
+  },
+};
 // ── Niveles (port fiel de levels.js) ─────────────────────────────────────────
 export interface LevelDef {
   speed: number;
@@ -114,6 +187,8 @@ export interface BloqueBusterEngineOptions {
   onState?: (s: BloqueBusterState) => void;
   /** Estado inicial del silencio (el componente lo lee de localStorage). */
   muted?: boolean;
+  /** Skin inicial (el componente lo lee de localStorage); por defecto 'clasico'. */
+  skin?: GameSkin;
 }
 export interface Block {
   x: number;
@@ -157,12 +232,14 @@ export class Particle {
     this.ttl -= dt;
     if (this.ttl <= 0) this.dead = true;
   }
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, glow = 8) {
     const alpha = Math.max(0, this.ttl / this.life);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = this.color;
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 8;
+    if (glow) {
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = glow;
+    }
     ctx.beginPath();
     ctx.arc(this.x, this.y, 2.2, 0, Math.PI * 2);
     ctx.fill();
@@ -185,6 +262,7 @@ export class BloqueBusterEngine {
   phase: BloqueBusterPhase = 'playing';
   private paused = false;
   private muted: boolean;
+  private skin: GameSkin = 'clasico';
   // Audio (solo navegador).
   private bounceSound: HTMLAudioElement | null = null;
   private breakSound: HTMLAudioElement | null = null;
@@ -220,6 +298,7 @@ export class BloqueBusterEngine {
   ) {
     this.onState = opts.onState;
     this.muted = opts.muted ?? false;
+    this.skin = opts.skin ?? 'clasico';
     this.ctx = canvas.getContext('2d');
     if (typeof Audio !== 'undefined') {
       try {
@@ -277,6 +356,11 @@ export class BloqueBusterEngine {
   /** Silencia/activa los dos efectos. */
   setMuted(muted: boolean) {
     this.muted = muted;
+  }
+  /** Cambia el skin (clasico/neon/retro); si está pausado/parado, redibuja ya. */
+  setSkin(skin: GameSkin) {
+    this.skin = skin;
+    if (!this.running) this.draw();
   }
   /** Cancela el RAF, quita listeners de teclado/puntero y el observador de tamaño. */
   destroy() {
@@ -397,7 +481,7 @@ export class BloqueBusterEngine {
   private explode(block: Block) {
     const cx = block.x + block.w / 2;
     const cy = block.y + block.h / 2;
-    const color = BLOCK_NEON[block.color] ?? '#ffffff';
+    const color = this.palette.blocks[block.color] ?? '#ffffff';
     for (let i = 0; i < 10; i++) this.particles.push(new Particle(cx, cy, color));
   }
   private loseLife() {
@@ -473,6 +557,10 @@ export class BloqueBusterEngine {
     if (this.ball.y > H) this.loseLife();
   }
   // ── Draw ──────────────────────────────────────────────────────────────────────
+  /** Paleta activa (colores de dibujo del skin actual). */
+  private get palette(): BloqueBusterPalette {
+    return SKIN_PALETTES[this.skin];
+  }
   private roundRect(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -491,59 +579,70 @@ export class BloqueBusterEngine {
     ctx.closePath();
   }
   private drawBlock(ctx: CanvasRenderingContext2D, block: Block) {
-    const color = BLOCK_NEON[block.color] ?? '#ffffff';
+    const p = this.palette;
+    const color = p.blocks[block.color] ?? '#ffffff';
     ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
+    if (p.glow) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = p.glow;
+    }
     ctx.fillStyle = color;
     this.roundRect(ctx, block.x + 2, block.y + 2, block.w - 4, block.h - 4, 5);
     ctx.fill();
     ctx.shadowBlur = 0;
     // Brillo superior.
-    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.fillStyle = p.blockShine;
     this.roundRect(ctx, block.x + 4, block.y + 4, block.w - 8, (block.h - 8) * 0.42, 3);
     ctx.fill();
     ctx.restore();
   }
   private drawOverlay(title: string, sub: string) {
     const ctx = this.ctx!;
-    ctx.fillStyle = 'rgba(4,4,15,0.72)';
+    const p = this.palette;
+    ctx.fillStyle = p.overlayBg;
     ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#22d3ee';
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = '#eafcff';
+    if (p.glow) {
+      ctx.shadowColor = p.overlayTitle;
+      ctx.shadowBlur = p.glow + 6;
+    }
+    ctx.fillStyle = p.overlayTitle;
     ctx.font = 'bold 56px monospace';
     ctx.fillText(title, W / 2, H / 2 - 18);
     ctx.shadowBlur = 0;
     ctx.font = '18px monospace';
-    ctx.fillStyle = 'rgba(234,252,255,0.72)';
+    ctx.fillStyle = p.overlaySub;
     ctx.fillText(sub, W / 2, H / 2 + 28);
   }
   private draw() {
     const ctx = this.ctx;
     if (!ctx) return;
+    const pal = this.palette;
     // Fondo.
-    ctx.fillStyle = '#06060f';
+    ctx.fillStyle = pal.bg;
     ctx.fillRect(0, 0, W, H);
     // Bloques.
     for (const block of this.blocks) if (block.alive) this.drawBlock(ctx, block);
     // Partículas (explosión).
-    this.particles.forEach((p) => p.draw(ctx));
-    // Paleta (barra neón cian).
+    this.particles.forEach((p) => p.draw(ctx, pal.glow));
+    // Paleta (barra del skin activo).
     ctx.save();
-    ctx.shadowColor = '#22d3ee';
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = '#22d3ee';
+    if (pal.glow) {
+      ctx.shadowColor = pal.paddle;
+      ctx.shadowBlur = pal.glow + 4;
+    }
+    ctx.fillStyle = pal.paddle;
     this.roundRect(ctx, this.paddle.x, this.paddle.y, this.paddle.w, this.paddle.h, 7);
     ctx.fill();
     ctx.restore();
-    // Bola (núcleo blanco con halo cian).
+    // Bola (núcleo claro con halo del skin activo).
     ctx.save();
-    ctx.shadowColor = '#eafcff';
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = '#ffffff';
+    if (pal.glow) {
+      ctx.shadowColor = pal.ballGlow;
+      ctx.shadowBlur = pal.glow + 2;
+    }
+    ctx.fillStyle = pal.ball;
     ctx.beginPath();
     ctx.arc(this.ball.x + this.ball.w / 2, this.ball.y + this.ball.h / 2, this.ball.w / 2, 0, Math.PI * 2);
     ctx.fill();
