@@ -1,6 +1,6 @@
 # SPEC 11 — Mando neón MK-II en móvil (apariencia del gamepad de referencia)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 10 (mando táctil unificado `.av-mobile-pad`/`.pad-dpad`/`.pad-actions` solo-móvil, canvas arriba + barra de pie + «JUGAR DE NUEVO»), SPEC 05 (Asteroides), SPEC 07 (Caída), SPEC 08 (Bloque Buster), SPEC 09 (Snake)
 > **Fecha:** 2026-10-20
 > **Objetivo:** Reestilizar **solo en móvil** el mando táctil ya existente para que la cruceta y los botones de acción se vean como el gamepad neón «MK-II» de `references/started-games/gamepad-assets` (teclas de cruceta con flechas SVG + hub con LED, botones de acción circulares biselados A/B), **sin gabinete exterior**, sin tocar jugabilidad, motores, servicios, BD ni el escritorio.

@@ -991,7 +991,7 @@ app-snake .crt-screen {
   display: none;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: clamp(12px, 5vw, 24px);
   margin-top: 14px;
   user-select: none;
   -webkit-user-select: none;
@@ -1008,9 +1008,9 @@ app-snake .crt-screen {
   grid-template-columns: repeat(3, auto);
   grid-template-areas:
     '. up .'
-    'left . right'
+    'left hub right'
     '. down .';
-  gap: 10px;
+  gap: clamp(6px, 2vw, 10px);
 }
 .pad-dpad .up {
   grid-area: up;
@@ -1028,7 +1028,213 @@ app-snake .crt-screen {
 .pad-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: clamp(10px, 3vw, 18px);
+}
+/* ===== SPEC 11 — Cruceta neón MK-II (solo móvil) =====
+   Reestiliza las teclas de la cruceta de SPEC 10 al look del gamepad de
+   referencia (references/started-games/gamepad-assets): tecla con relieve 3D
+   (sombra inferior 0 4px 0 + inset), flecha SVG en vez de glifo Unicode, y al
+   pulsar se hunde y enciende en cian con glow; más un hub central con gema LED
+   que late. Solo se ve en móvil: .av-mobile-pad nace display:none y solo el
+   breakpoint de SPEC 10 lo muestra, así que estos estilos no tocan el
+   escritorio. El tamaño fluido con clamp() llega en el paso 3; aquí se fija la
+   apariencia. Scope .pad-dpad .touch-btn para no afectar a los botones A/B. */
+.pad-dpad .touch-btn {
+  width: clamp(44px, 12.5vw, 52px);
+  min-width: clamp(44px, 12.5vw, 52px);
+  height: clamp(44px, 12.5vw, 52px);
+  padding: 0;
+  color: var(--ink-dim);
+  background: linear-gradient(180deg, #1a1a25, #0a0a12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 80ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+.pad-dpad .touch-btn:hover {
+  color: var(--cyan);
+  border-color: rgba(0, 245, 255, 0.35);
+}
+.pad-dpad .touch-btn:active {
+  transform: translateY(3px);
+  color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
+  box-shadow:
+    0 1px 0 #050507,
+    inset 0 0 16px rgba(0, 245, 255, 0.45),
+    0 0 16px rgba(0, 245, 255, 0.5);
+}
+/* Flecha SVG interna (el marcado <svg> por tecla llega en el paso 4; aquí su
+   estilo). Decorativa: aria-hidden en el marcado, fill: currentColor para heredar
+   el color de la tecla (cian al activar). */
+.pad-arrow {
+  width: clamp(18px, 5vw, 22px);
+  height: clamp(18px, 5vw, 22px);
+  fill: currentColor;
+  transition: filter 140ms ease;
+  pointer-events: none;
+}
+.pad-dpad .touch-btn:active .pad-arrow {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 12px var(--cyan));
+}
+/* Hub central con gema LED (decorativo, aria-hidden). Ocupa la celda central del
+   grid en cruz (área 'hub'); el marcado lo añade el paso 4. La gema late; se
+   detiene bajo prefers-reduced-motion. */
+.pad-hub {
+  grid-area: hub;
+  align-self: center;
+  justify-self: center;
+  width: clamp(44px, 12.5vw, 52px);
+  height: clamp(44px, 12.5vw, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, #181822 0%, #08080d 80%);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+.pad-hub-gem {
+  width: 12px;
+  height: 12px;
+  background: var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan),
+    inset 0 0 4px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: pad-led-pulse 2s ease-in-out infinite;
+}
+@keyframes pad-led-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pad-dpad .touch-btn {
+    transition: none;
+  }
+  .pad-arrow {
+    transition: none;
+  }
+  .pad-hub-gem {
+    animation: none;
+  }
+}
+/* ===== SPEC 11 — Botones de acción circulares A/B (solo móvil) =====
+   Botón redondo biselado del gamepad MK-II: brillo especular, borde de color,
+   sombra inferior (0 6px 0) + glow, y al pulsar se hunde con un anillo punteado.
+   Identidad del PNG: .a = magenta (acción primaria del juego), .b = cian
+   (secundaria) — reemplaza el detalle de SPEC 10 "B usa el acento .fire magenta".
+   La letra «A»/«B» es visible; la función (FUEGO/ROTAR/CAÍDA) va en aria-label/
+   title del marcado (paso 5). Clase independiente (no .touch-btn) para no heredar
+   el rectángulo. Tamaño fluido con clamp() (mín. 52px ≥ 44px táctil). Solo se ve
+   en móvil porque vive dentro de .av-mobile-pad (display:none en escritorio). */
+.pad-ab {
+  position: relative;
+  width: clamp(52px, 15vw, 72px);
+  height: clamp(52px, 15vw, 72px);
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.25), transparent 50%),
+    radial-gradient(circle at 50% 55%, var(--ab-mid), var(--ab-deep) 75%);
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  box-shadow:
+    0 6px 0 #050507,
+    0 0 22px var(--ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
+  transition:
+    transform 80ms ease,
+    box-shadow 140ms ease;
+}
+.pad-ab.a {
+  color: var(--magenta);
+  --ab-mid: rgba(255, 0, 110, 0.7);
+  --ab-deep: rgba(110, 0, 40, 0.95);
+  --ab-glow: rgba(255, 0, 110, 0.4);
+}
+.pad-ab.b {
+  color: var(--cyan);
+  --ab-mid: rgba(0, 200, 230, 0.7);
+  --ab-deep: rgba(0, 50, 70, 0.95);
+  --ab-glow: rgba(0, 245, 255, 0.4);
+}
+.pad-ab-letter {
+  font-family: var(--pixel);
+  font-size: clamp(16px, 5vw, 22px);
+  color: #fff;
+  letter-spacing: 0.02em;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.pad-ab.a .pad-ab-letter {
+  text-shadow:
+    0 0 8px var(--magenta),
+    0 0 18px var(--magenta),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.pad-ab.b .pad-ab-letter {
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 18px var(--cyan),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.pad-ab-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0;
+  transition:
+    opacity 140ms ease,
+    transform 200ms ease;
+  pointer-events: none;
+}
+.pad-ab:hover .pad-ab-ring {
+  opacity: 0.45;
+}
+.pad-ab:active {
+  transform: translateY(4px) scale(0.97);
+  box-shadow:
+    0 1px 0 #050507,
+    0 0 36px var(--ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+}
+.pad-ab:active .pad-ab-ring {
+  opacity: 1;
+  transform: scale(1.08);
+}
+.pad-ab:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pad-ab,
+  .pad-ab-ring {
+    transition: none;
+  }
 }
 /* ===== SPEC 10 — Layout de juego en móvil =====
    Solo en móvil (puntero grueso o ancho ≤760px): la vista del reproductor se
@@ -1058,7 +1264,7 @@ app-snake .crt-screen {
   app-caida .crt-screen,
   app-bloque-buster .crt-screen,
   app-snake .crt-screen {
-    max-height: 48dvh;
+    max-height: 46dvh;
   }
   /* El mando (marcado por juego en el paso 5) pasa a visible; nace oculto en el
      paso 2. Su contenido aún no existe, así que todavía no se ve nada nuevo. */
