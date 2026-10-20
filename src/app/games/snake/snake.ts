@@ -12,7 +12,14 @@ import { RouterLink } from '@angular/router';
 import { EsNumberPipe } from '../../shared/es-number.pipe';
 import { ScoresService } from '../../services/scores.service';
 import { SessionService } from '../../services/session.service';
-import { SnakeEngine, type SnakePhase, type SnakeState, type TouchAction } from './snake-engine';
+import {
+  SnakeEngine,
+  type GameSkin,
+  type SnakePhase,
+  type SnakeState,
+  type TouchAction,
+} from './snake-engine';
+const SKIN_KEY = 'av_snake_skin';
 @Component({
   selector: 'app-snake',
   imports: [EsNumberPipe, RouterLink],
@@ -33,6 +40,13 @@ export class Snake implements OnDestroy {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
+  // Skin del juego (dark-only): clasico (default), neon, retro. Persistido por juego.
+  protected readonly skin = signal<GameSkin>('clasico');
+  protected readonly skinOptions: readonly { id: GameSkin; label: string }[] = [
+    { id: 'clasico', label: 'CLÁSICO' },
+    { id: 'neon', label: 'NEÓN' },
+    { id: 'retro', label: 'RETRO' },
+  ];
   private engine: SnakeEngine | null = null;
   private pauseKeyHandler: ((e: KeyboardEvent) => void) | null = null;
   constructor() {
@@ -46,6 +60,12 @@ export class Snake implements OnDestroy {
           onState: (s) => this.zone.run(() => this.applyState(s)),
         });
         this.engine = engine;
+        // Restaura el skin guardado (preferencia por juego, solo-navegador).
+        const storedSkin = this.readStoredSkin();
+        if (storedSkin) {
+          this.zone.run(() => this.skin.set(storedSkin));
+          engine.setSkin(storedSkin);
+        }
         engine.start();
         // La pausa la dispara el componente (P/Esc): el motor no bindea P.
         const handler = (e: KeyboardEvent) => {
@@ -88,6 +108,24 @@ export class Snake implements OnDestroy {
   protected press(action: TouchAction, pressed: boolean, e: Event) {
     e.preventDefault();
     this.engine?.setInput(action, pressed);
+  }
+  protected selectSkin(skin: GameSkin) {
+    if (skin === this.skin()) return;
+    this.skin.set(skin);
+    this.engine?.setSkin(skin);
+    try {
+      localStorage.setItem(SKIN_KEY, skin);
+    } catch {
+      /* localStorage no disponible (modo privado/SSR): el skin sigue en memoria. */
+    }
+  }
+  private readStoredSkin(): GameSkin | null {
+    try {
+      const v = localStorage.getItem(SKIN_KEY);
+      return v === 'clasico' || v === 'neon' || v === 'retro' ? v : null;
+    } catch {
+      return null;
+    }
   }
   protected setName(value: string) {
     this.name.set(value.toUpperCase().slice(0, 12));

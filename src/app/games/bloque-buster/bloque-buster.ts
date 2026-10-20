@@ -16,9 +16,11 @@ import {
   BloqueBusterEngine,
   type BloqueBusterPhase,
   type BloqueBusterState,
+  type GameSkin,
   type TouchAction,
 } from './bloque-buster-engine';
 const MUTED_KEY = 'av_bloque_buster_muted';
+const SKIN_KEY = 'av_bloque-buster_skin';
 @Component({
   selector: 'app-bloque-buster',
   imports: [EsNumberPipe, RouterLink],
@@ -41,6 +43,13 @@ export class BloqueBuster implements OnDestroy {
   protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
   // Silencio: se restaura de localStorage (preferencia por jugador, solo-navegador).
   protected readonly muted = signal(this.readStoredMuted());
+  // Skin del juego (dark-only): clasico (default), neon, retro. Persistido por juego.
+  protected readonly skin = signal<GameSkin>(this.readStoredSkin());
+  protected readonly skinOptions: readonly { id: GameSkin; label: string }[] = [
+    { id: 'clasico', label: 'CLÁSICO' },
+    { id: 'neon', label: 'NEÓN' },
+    { id: 'retro', label: 'RETRO' },
+  ];
   private engine: BloqueBusterEngine | null = null;
   private pauseKeyHandler: ((e: KeyboardEvent) => void) | null = null;
   constructor() {
@@ -53,6 +62,7 @@ export class BloqueBuster implements OnDestroy {
         const engine = new BloqueBusterEngine(canvas, {
           onState: (s) => this.zone.run(() => this.applyState(s)),
           muted: this.muted(),
+          skin: this.skin(),
         });
         this.engine = engine;
         engine.start();
@@ -108,6 +118,24 @@ export class BloqueBuster implements OnDestroy {
       return localStorage.getItem(MUTED_KEY) === 'true';
     } catch {
       return false;
+    }
+  }
+  protected selectSkin(skin: GameSkin) {
+    if (skin === this.skin()) return;
+    this.skin.set(skin);
+    this.engine?.setSkin(skin);
+    try {
+      localStorage.setItem(SKIN_KEY, skin);
+    } catch {
+      /* localStorage no disponible (modo privado/SSR): el skin sigue en memoria. */
+    }
+  }
+  private readStoredSkin(): GameSkin {
+    try {
+      const v = localStorage.getItem(SKIN_KEY);
+      return v === 'clasico' || v === 'neon' || v === 'retro' ? v : 'clasico';
+    } catch {
+      return 'clasico';
     }
   }
   protected press(action: TouchAction, pressed: boolean, e: Event) {

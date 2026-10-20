@@ -91,6 +91,79 @@ export function rotateCW(shape: number[][]): number[][] {
 }
 const createBoard = (): number[][] =>
   Array.from({ length: ROWS }, () => new Array<number>(COLS).fill(0));
+// ── Skins (paletas dark-only; el componente persiste la selección por juego) ──
+export type GameSkin = 'clasico' | 'neon' | 'retro';
+/** Colores que el motor usa para dibujar, por skin. Todos legibles sobre oscuro. */
+export interface CaidaPalette {
+  bg: string; // fondo del tablero y de la vista previa NEXT
+  grid: string; // líneas de la rejilla
+  blocks: (string | null)[]; // color por índice de celda (0 = vacío; 1..8 incl. la tuerca)
+  highlight: string; // banda superior de brillo de cada bloque
+  ghostAlpha: number; // opacidad del ghost (proyección del hard-drop)
+  overlayBg: string; // velo del overlay PAUSA/GAME OVER
+  overlayText: string; // título del overlay
+  overlaySub: string; // subtítulo del overlay
+  glow: number; // shadowBlur de los bloques (0 = vectores nítidos sin glow)
+}
+/** Las 3 paletas, todas sobre fondo oscuro (no hay modo claro). */
+export const SKIN_PALETTES: Record<GameSkin, CaidaPalette> = {
+  // Arcade auténtico: colores originales de las piezas sobre negro, sin resplandor.
+  clasico: {
+    bg: '#05050c',
+    grid: 'rgba(255,255,255,0.07)',
+    blocks: COLORS,
+    highlight: 'rgba(255,255,255,0.12)',
+    ghostAlpha: 0.2,
+    overlayBg: 'rgba(5,5,12,0.8)',
+    overlayText: '#ffffff',
+    overlaySub: 'rgba(255,255,255,0.65)',
+    glow: 0,
+  },
+  // Neón/CRT del Vault: piezas saturadas con resplandor (el look actual del Vault).
+  neon: {
+    bg: '#06060f',
+    grid: 'rgba(255,255,255,0.07)',
+    blocks: [
+      null,
+      '#22e0ff', // I
+      '#ffe95c', // O
+      '#d36bff', // T
+      '#54ff9f', // S
+      '#ff5c7a', // Z
+      '#5ca8ff', // J
+      '#ffa94d', // L
+      '#c7d0e0', // N (tuerca)
+    ],
+    highlight: 'rgba(255,255,255,0.18)',
+    ghostAlpha: 0.22,
+    overlayBg: 'rgba(6,6,15,0.78)',
+    overlayText: '#ffffff',
+    overlaySub: 'rgba(255,255,255,0.65)',
+    glow: 9,
+  },
+  // Monocromo CRT: fósforo verde sobre negro verdoso; piezas en gradación de verdes.
+  retro: {
+    bg: '#02100a',
+    grid: 'rgba(59,255,126,0.12)',
+    blocks: [
+      null,
+      '#3bff7e', // I
+      '#9dffb8', // O
+      '#1fd96a', // T
+      '#5cff97', // S
+      '#28b45a', // Z
+      '#79ffa8', // J
+      '#48e67e', // L
+      '#c7ffd8', // N (tuerca)
+    ],
+    highlight: 'rgba(200,255,214,0.18)',
+    ghostAlpha: 0.22,
+    overlayBg: 'rgba(2,16,10,0.8)',
+    overlayText: '#3bff7e',
+    overlaySub: 'rgba(59,255,126,0.6)',
+    glow: 6,
+  },
+};
 // ── Tipos públicos ────────────────────────────────────────────────────────────
 export type CaidaPhase = 'playing' | 'gameover'; // una sola vida: no hay fase 'dead'
 export interface CaidaState {
@@ -141,7 +214,7 @@ export class CaidaEngine {
   phase: CaidaPhase = 'playing';
   private dropInterval = 1000;
   private dropAccum = 0;
-  private boardTheme: 'dark' | 'light' = 'dark';
+  private skin: GameSkin = 'clasico';
   private paused = false;
   // Input
   private readonly keys: Record<string, boolean> = {};
@@ -214,9 +287,9 @@ export class CaidaEngine {
   setInput(action: TouchAction, pressed: boolean) {
     this.setKey(TOUCH_CODE[action], pressed);
   }
-  /** Alterna la paleta del tablero (solo fondo/rejilla; los colores de pieza no cambian). */
-  setBoardTheme(theme: 'dark' | 'light') {
-    this.boardTheme = theme;
+  /** Cambia el skin (clasico/neon/retro); si está pausado/parado, redibuja ya. */
+  setSkin(skin: GameSkin) {
+    this.skin = skin;
     if (!this.running) this.draw();
     this.drawNext();
   }
@@ -415,10 +488,9 @@ export class CaidaEngine {
     }
   }
   // ── Draw ────────────────────────────────────────────────────────────────────
-  private get palette() {
-    return this.boardTheme === 'light'
-      ? { bg: '#dfe3ee', grid: 'rgba(20,20,40,0.14)', text: '#14142a', sub: 'rgba(20,20,40,0.6)', dim: 'rgba(223,227,238,0.82)' }
-      : { bg: '#06060f', grid: 'rgba(255,255,255,0.07)', text: '#ffffff', sub: 'rgba(255,255,255,0.65)', dim: 'rgba(6,6,15,0.78)' };
+  /** Paleta activa (colores de dibujo del skin actual). */
+  private get palette(): CaidaPalette {
+    return SKIN_PALETTES[this.skin];
   }
   private drawBlock(
     ctx: CanvasRenderingContext2D,
@@ -426,28 +498,36 @@ export class CaidaEngine {
     y: number,
     colorIndex: number,
     cell: number,
+    p: CaidaPalette,
     alpha = 1,
   ) {
     if (!colorIndex) return;
+    const color = p.blocks[colorIndex]!;
+    ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = COLORS[colorIndex]!;
+    if (p.glow && alpha === 1) {
+      ctx.shadowBlur = p.glow;
+      ctx.shadowColor = color;
+    }
+    ctx.fillStyle = color;
     ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, cell - 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = p.highlight;
     ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, Math.max(2, cell * 0.13));
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
   private drawOverlay(title: string, sub: string) {
     const ctx = this.ctx!;
     const p = this.palette;
     const s = Math.min(1, Math.max(0.5, this.W / 300));
-    ctx.fillStyle = p.dim;
+    ctx.fillStyle = p.overlayBg;
     ctx.fillRect(0, 0, this.W, this.H);
     ctx.textAlign = 'center';
-    ctx.fillStyle = p.text;
+    ctx.fillStyle = p.overlayText;
     ctx.font = `bold ${30 * s}px monospace`;
     ctx.fillText(title, this.W / 2, this.H / 2 - 10 * s);
     ctx.font = `${12 * s}px monospace`;
-    ctx.fillStyle = p.sub;
+    ctx.fillStyle = p.overlaySub;
     ctx.fillText(sub, this.W / 2, this.H / 2 + 20 * s);
   }
   private draw() {
@@ -479,18 +559,18 @@ export class CaidaEngine {
     }
     // Tablero
     for (let r = 0; r < ROWS; r++)
-      for (let c = 0; c < COLS; c++) this.drawBlock(ctx, c, r, this.board[r][c], cell);
+      for (let c = 0; c < COLS; c++) this.drawBlock(ctx, c, r, this.board[r][c], cell, p);
     // Ghost + pieza actual (solo jugando)
     if (this.phase === 'playing' && this.current) {
       const gy = this.ghostY();
       for (let r = 0; r < this.current.shape.length; r++)
         for (let c = 0; c < this.current.shape[r].length; c++)
           if (this.current.shape[r][c])
-            this.drawBlock(ctx, this.current.x + c, gy + r, this.current.shape[r][c], cell, 0.2);
+            this.drawBlock(ctx, this.current.x + c, gy + r, this.current.shape[r][c], cell, p, p.ghostAlpha);
       for (let r = 0; r < this.current.shape.length; r++)
         for (let c = 0; c < this.current.shape[r].length; c++)
           if (this.current.shape[r][c])
-            this.drawBlock(ctx, this.current.x + c, this.current.y + r, this.current.shape[r][c], cell);
+            this.drawBlock(ctx, this.current.x + c, this.current.y + r, this.current.shape[r][c], cell, p);
     }
     ctx.restore();
     if (this.phase === 'gameover')
@@ -512,10 +592,18 @@ export class CaidaEngine {
     for (let r = 0; r < shape.length; r++)
       for (let c = 0; c < shape[r].length; c++) {
         if (!shape[r][c]) continue;
-        ctx.fillStyle = COLORS[shape[r][c]]!;
+        const color = p.blocks[shape[r][c]]!;
+        ctx.save();
+        if (p.glow) {
+          ctx.shadowBlur = p.glow;
+          ctx.shadowColor = color;
+        }
+        ctx.fillStyle = color;
         ctx.fillRect(ox + c * cell + 1, oy + r * cell + 1, cell - 2, cell - 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = p.highlight;
         ctx.fillRect(ox + c * cell + 1, oy + r * cell + 1, cell - 2, Math.max(2, cell * 0.13));
+        ctx.restore();
       }
   }
   // ── Bucle principal ────────────────────────────────────────────────────────────
