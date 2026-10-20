@@ -125,6 +125,10 @@ export class Caida implements OnDestroy {
       return null;
     }
   }
+  protected restartGame() {
+    this.engine?.restart();
+    this.paused.set(false);
+  }
   protected press(action: TouchAction, pressed: boolean, e: Event) {
     e.preventDefault();
     this.engine?.setInput(action, pressed);

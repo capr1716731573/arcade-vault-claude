@@ -108,6 +108,10 @@ export class Asteroids implements OnDestroy {
     if (next) engine.pause();
     else engine.resume();
   }
+  protected restartGame() {
+    this.engine?.restart();
+    this.paused.set(false);
+  }
   protected press(action: TouchAction, pressed: boolean, e: Event) {
     e.preventDefault();
     this.engine?.setInput(action, pressed);
