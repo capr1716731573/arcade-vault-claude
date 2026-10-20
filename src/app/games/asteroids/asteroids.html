@@ -24,6 +24,19 @@
     }
   </div>
   <div class="hud-actions">
+    <div class="skin-select" role="group" aria-label="Skin del juego">
+      @for (opt of skinOptions; track opt.id) {
+        <button
+          type="button"
+          class="skin-btn"
+          [class.active]="skin() === opt.id"
+          [attr.aria-pressed]="skin() === opt.id"
+          (click)="selectSkin(opt.id)"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    </div>
     <button type="button" class="btn yellow" (click)="togglePause()">
       {{ paused() ? 'REANUDAR' : 'PAUSA' }}
     </button>

@@ -618,7 +618,47 @@ app-root { position: relative; z-index: 2; display: flex; flex-direction: column
 .hud-stat .v { font-family: var(--pixel); font-size: 16px; color: var(--cyan); text-shadow: 0 0 6px rgba(0,245,255,0.5); }
 .hud-stat.lives .v { color: var(--magenta); text-shadow: 0 0 6px rgba(255,0,110,0.5); }
 .hud-stat.level .v { color: var(--yellow); text-shadow: 0 0 6px rgba(245,255,0,0.5); }
-.hud-actions { display: flex; gap: 10px; }
+.hud-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+/* ===== SELECTOR DE SKIN (agente @skin-designer) =====
+   Control segmentado de 3 vías (clásico/neón/retro) en el HUD del reproductor.
+   Dark-only: no hay variante clara; el estado activo se distingue por color,
+   fondo y resplandor, y el aria-pressed lo comunica a lectores de pantalla. */
+.skin-select {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.skin-btn {
+  appearance: none;
+  padding: 11px 12px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  background: transparent;
+  color: var(--ink-dim);
+  border: 0;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.skin-btn:last-child { border-right: 0; }
+.skin-btn:hover { color: var(--ink); }
+.skin-btn.active {
+  color: var(--cyan);
+  background: rgba(0, 245, 255, 0.1);
+  text-shadow: 0 0 6px rgba(0, 245, 255, 0.5);
+  box-shadow: inset 0 0 10px rgba(0, 245, 255, 0.25);
+}
+.skin-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+  color: var(--cyan);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skin-btn { transition: none; }
+}
 .crt {
   position: relative;
   border-radius: 28px;

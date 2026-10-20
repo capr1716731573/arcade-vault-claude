@@ -17,8 +17,10 @@ import {
   AsteroidsEngine,
   type AsteroidsPhase,
   type AsteroidsState,
+  type GameSkin,
   type TouchAction,
 } from './asteroids-engine';
+const SKIN_KEY = 'av_asteroides_skin';
 @Component({
   selector: 'app-asteroids',
   imports: [EsNumberPipe, RouterLink],
@@ -41,6 +43,13 @@ export class Asteroids implements OnDestroy {
   protected readonly saveError = signal<string | null>(null);
   protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
   protected readonly hearts = computed(() => '♥ '.repeat(this.lives()).trim() || '—');
+  // Skin del juego (dark-only): clasico (default), neon, retro. Persistido por juego.
+  protected readonly skin = signal<GameSkin>('clasico');
+  protected readonly skinOptions: readonly { id: GameSkin; label: string }[] = [
+    { id: 'clasico', label: 'CLÁSICO' },
+    { id: 'neon', label: 'NEÓN' },
+    { id: 'retro', label: 'RETRO' },
+  ];
   private engine: AsteroidsEngine | null = null;
   private pauseKeyHandler: ((e: KeyboardEvent) => void) | null = null;
   constructor() {
@@ -54,6 +63,12 @@ export class Asteroids implements OnDestroy {
           onState: (s) => this.zone.run(() => this.applyState(s)),
         });
         this.engine = engine;
+        // Restaura el skin guardado (preferencia por juego, solo-navegador).
+        const storedSkin = this.readStoredSkin();
+        if (storedSkin) {
+          this.zone.run(() => this.skin.set(storedSkin));
+          engine.setSkin(storedSkin);
+        }
         engine.start();
         const handler = (e: KeyboardEvent) => {
           if (e.code !== 'KeyP' && e.code !== 'Escape') return;
@@ -96,6 +111,24 @@ export class Asteroids implements OnDestroy {
   protected press(action: TouchAction, pressed: boolean, e: Event) {
     e.preventDefault();
     this.engine?.setInput(action, pressed);
+  }
+  protected selectSkin(skin: GameSkin) {
+    if (skin === this.skin()) return;
+    this.skin.set(skin);
+    this.engine?.setSkin(skin);
+    try {
+      localStorage.setItem(SKIN_KEY, skin);
+    } catch {
+      /* localStorage no disponible (modo privado/SSR): el skin sigue en memoria. */
+    }
+  }
+  private readStoredSkin(): GameSkin | null {
+    try {
+      const v = localStorage.getItem(SKIN_KEY);
+      return v === 'clasico' || v === 'neon' || v === 'retro' ? v : null;
+    } catch {
+      return null;
+    }
   }
   protected setName(value: string) {
     this.name.set(value.toUpperCase().slice(0, 10));
