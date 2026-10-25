@@ -446,6 +446,24 @@ app-root { position: relative; z-index: 2; display: flex; flex-direction: column
     linear-gradient(90deg, var(--green) 0 12px, transparent 12px) calc(20% + 28px) calc(50% - 12px)/12px 12px no-repeat;
   filter: drop-shadow(0 0 6px rgba(0,255,136,0.6));
 }
+.cover-frogger { background: linear-gradient(180deg,#07131f 0 48%, #0a2a16 48% 100%); }
+.cover-frogger::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle at 50% 74%, var(--green) 0 11px, transparent 12px),
+    linear-gradient(90deg, #8a5a2b 0 70px, transparent 70px),
+    linear-gradient(90deg, #8a5a2b 0 54px, transparent 54px);
+  background-repeat: no-repeat;
+  background-position: center, 12% 28%, 62% 16%;
+  filter: drop-shadow(0 0 7px rgba(0,255,136,0.6));
+}
+.cover-frogger::before {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 20%;
+  height: 10px;
+  background: repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,214,102,0.5) 20px 40px);
+}
 .cover-glot { background: radial-gradient(circle at 50% 50%, #1a002a, #0a0a18); }
 .cover-glot::after {
   content: "";
@@ -979,6 +997,29 @@ app-snake .crt-screen {
   display: block;
   touch-action: none; /* sin scroll/zoom al jugar sobre el canvas */
 }
+/* ===== FROGGER (SPEC 12) =====
+   Quinto juego real. Grilla fija 16×14 (plano lógico 640×560); la pantalla CRT
+   usa el mismo aspecto 16:14 para que la grilla nunca se deforme (el motor solo
+   escala el backing store con DPR). Dibujo 100% vectorial neón; controles =
+   teclado/WASD + D-pad táctil de 4 direcciones. */
+app-frogger .crt {
+  max-width: 600px;
+  margin-inline: auto;
+}
+app-frogger .crt-screen {
+  aspect-ratio: 16 / 14;
+  max-width: 560px;
+  max-height: 80vh;
+  margin-inline: auto;
+}
+.frogger-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none; /* sin scroll/zoom al jugar sobre el canvas */
+}
 /* ===== SPEC 10 — Mando táctil unificado (solo móvil) =====
    Canvas arriba, este mando abajo (como un gamepad): la cruceta a un lado y
    hasta 2 botones de acción al otro, para jugar con los dos pulgares. Mismo
@@ -1263,7 +1304,8 @@ app-snake .crt-screen {
   app-asteroids .crt-screen,
   app-caida .crt-screen,
   app-bloque-buster .crt-screen,
-  app-snake .crt-screen {
+  app-snake .crt-screen,
+  app-frogger .crt-screen {
     max-height: 46dvh;
   }
   /* El mando (marcado por juego en el paso 5) pasa a visible; nace oculto en el
