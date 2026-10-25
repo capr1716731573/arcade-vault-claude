@@ -41,6 +41,7 @@ export const GAMES_FIXTURE: GameRow[] = [
   g('bloque-buster', 'BLOQUE BUSTER', 'ARCADE', 'cyan', 1, true),
   g('caida', 'CAÍDA', 'PUZZLE', 'magenta', 2, true),
   g('snake', 'SNAKE', 'ARCADE', 'green', 3, true),
+  g('frogger', 'FROGGER', 'ARCADE', 'green', 4, true),
 ];
 export interface ScoreDbRow {
   name: string;
