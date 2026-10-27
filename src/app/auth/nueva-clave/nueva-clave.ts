@@ -1,6 +1,7 @@
 import { afterNextRender, Component, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SessionService } from '../../services/session.service';
+import { validatePassword } from '../password-policy';
 /**
  * Fija una contraseña nueva tras seguir el enlace de recuperación
  * (`/acceso/nueva-clave`). El enlace establece una sesión de recovery
@@ -40,8 +41,9 @@ export class NuevaClave {
     e.preventDefault();
     if (this.loading() || !this.ready()) return;
     const p = this.password();
-    if (p.length < 6) {
-      this.error.set('La contraseña debe tener al menos 6 caracteres.');
+    const policyError = validatePassword(p);
+    if (policyError) {
+      this.error.set(policyError);
       return;
     }
     if (p !== this.password2()) {
