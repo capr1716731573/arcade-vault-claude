@@ -18,6 +18,36 @@ export const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =
   Math.hypot(a.x - b.x, a.y - b.y);
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const randInt = (min: number, max: number) => Math.floor(rand(min, max + 1));
+/**
+ * Elimina en el sitio los elementos marcados `.dead` (preserva el orden) sin
+ * crear un array nuevo. Sustituye a `arr = arr.filter(x => !x.dead)` en el
+ * camino caliente para no asignar por frame en estado estable (SPEC 13).
+ */
+const compact = <T extends { dead: boolean }>(arr: T[]): void => {
+  let w = 0;
+  for (let r = 0; r < arr.length; r++) {
+    const item = arr[r];
+    if (!item.dead) {
+      if (w !== r) arr[w] = item;
+      w++;
+    }
+  }
+  arr.length = w;
+};
+/**
+ * Color `rgb(r,g,b)` de las partículas memorizado por skin: el alpha se aplica
+ * con `globalAlpha` en vez de recomponer una string `rgba(...)` por partícula y
+ * frame (SPEC 13: cero strings nuevas en el camino caliente).
+ */
+const PARTICLE_COLOR_CACHE = new Map<string, string>();
+const particleColor = (base: string): string => {
+  let c = PARTICLE_COLOR_CACHE.get(base);
+  if (c === undefined) {
+    c = `rgb(${base})`;
+    PARTICLE_COLOR_CACHE.set(base, c);
+  }
+  return c;
+};
 // ── Constantes ──────────────────────────────────────────────────────────────
 const POWERUP_DROP_CHANCE = 0.15;
 const POWERUP_DURATION = 5;
@@ -129,10 +159,6 @@ export class Bullet {
   }
   draw(ctx: CanvasRenderingContext2D, p: AsteroidsPalette) {
     ctx.save();
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = p.bullet;
-    }
     ctx.fillStyle = p.bullet;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -185,10 +211,6 @@ export class Asteroid {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = p.asteroid;
-    }
     ctx.strokeStyle = p.asteroid;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = 'round';
@@ -226,10 +248,6 @@ export class PowerUp {
     if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
     const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
     ctx.save();
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = p.accent;
-    }
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.PI / 4);
     ctx.strokeStyle = p.accent;
@@ -238,10 +256,6 @@ export class PowerUp {
     ctx.strokeRect(-r, -r, r * 2, r * 2);
     ctx.restore();
     ctx.save();
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = p.accent;
-    }
     ctx.fillStyle = p.accent;
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'center';
@@ -373,20 +387,14 @@ export class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
   draw(ctx: CanvasRenderingContext2D, p: AsteroidsPalette) {
-    const alpha = this.ttl / this.life;
-    const color = `rgba(${p.particle},${alpha.toFixed(2)})`;
-    ctx.save();
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = color;
-    }
-    ctx.strokeStyle = color;
+    ctx.globalAlpha = this.ttl / this.life;
+    ctx.strokeStyle = particleColor(p.particle);
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.x - this.vx * 0.05, this.y - this.vy * 0.05);
     ctx.stroke();
-    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 }
 // ── Motor ───────────────────────────────────────────────────────────────────
@@ -420,7 +428,14 @@ export class AsteroidsEngine {
   private destroyed = false;
   private listening = false;
   private resizeObserver: ResizeObserver | null = null;
-  private lastSnapshotKey = '';
+  // Buffer reutilizado para los asteroides nuevos de la división (sin asignar array por frame).
+  private readonly splitBuffer: Asteroid[] = [];
+  // Dedupe de emitState por comparación campo a campo (sin asignar string por frame).
+  private lastScore = -1;
+  private lastLives = -1;
+  private lastLevel = -1;
+  private lastTriple10 = -1;
+  private lastPhase: AsteroidsPhase | '' = '';
   private readonly onKeyDown = (e: KeyboardEvent) => {
     if (GAME_KEYS.has(e.code)) e.preventDefault();
     this.setKey(e.code, true);
@@ -595,15 +610,15 @@ export class AsteroidsEngine {
   update(dt: number) {
     if (this.phase === 'gameover') {
       if (this.pressed('Space')) this.initGame();
-      this.particles.forEach((p) => p.update(dt));
-      this.particles = this.particles.filter((p) => !p.dead);
+      for (let i = 0; i < this.particles.length; i++) this.particles[i].update(dt);
+      compact(this.particles);
       return;
     }
     if (this.phase === 'dead') {
       this.deadTimer -= dt;
-      this.particles.forEach((p) => p.update(dt));
-      this.particles = this.particles.filter((p) => !p.dead);
-      this.asteroids.forEach((a) => a.update(dt, this.W, this.H));
+      for (let i = 0; i < this.particles.length; i++) this.particles[i].update(dt);
+      compact(this.particles);
+      for (let i = 0; i < this.asteroids.length; i++) this.asteroids[i].update(dt, this.W, this.H);
       if (this.deadTimer <= 0) {
         this.phase = 'playing';
         this.ship.reset(this.W, this.H);
@@ -615,29 +630,34 @@ export class AsteroidsEngine {
       this.bullets.push(...this.ship.tryShoot());
     }
     this.ship.update(dt, this.W, this.H, this.keys);
-    this.bullets.forEach((b) => b.update(dt, this.W, this.H));
-    this.asteroids.forEach((a) => a.update(dt, this.W, this.H));
-    this.particles.forEach((p) => p.update(dt));
-    this.powerUps.forEach((p) => p.update(dt, this.W, this.H));
-    this.bullets = this.bullets.filter((b) => !b.dead);
-    this.particles = this.particles.filter((p) => !p.dead);
-    this.powerUps = this.powerUps.filter((p) => !p.dead);
-    for (const p of this.powerUps) {
+    for (let i = 0; i < this.bullets.length; i++) this.bullets[i].update(dt, this.W, this.H);
+    for (let i = 0; i < this.asteroids.length; i++) this.asteroids[i].update(dt, this.W, this.H);
+    for (let i = 0; i < this.particles.length; i++) this.particles[i].update(dt);
+    for (let i = 0; i < this.powerUps.length; i++) this.powerUps[i].update(dt, this.W, this.H);
+    compact(this.bullets);
+    compact(this.particles);
+    compact(this.powerUps);
+    for (let i = 0; i < this.powerUps.length; i++) {
+      const p = this.powerUps[i];
       if (!p.dead && dist(this.ship, p) < this.ship.radius + p.radius) {
         p.dead = true;
         this.ship.tripleShot = POWERUP_DURATION;
       }
     }
-    // Bala vs asteroide
-    const newAsteroids: Asteroid[] = [];
-    for (const b of this.bullets) {
-      for (const a of this.asteroids) {
+    // Bala vs asteroide; buffer de división reutilizado (sin asignar array por frame).
+    const newAsteroids = this.splitBuffer;
+    newAsteroids.length = 0;
+    for (let bi = 0; bi < this.bullets.length; bi++) {
+      const b = this.bullets[bi];
+      for (let ai = 0; ai < this.asteroids.length; ai++) {
+        const a = this.asteroids[ai];
         if (!a.dead && !b.dead && dist(b, a) < a.radius) {
           b.dead = true;
           a.dead = true;
           this.score += POINTS[a.size];
           this.explode(a.x, a.y, a.size * 5);
-          newAsteroids.push(...a.split());
+          const parts = a.split();
+          for (let k = 0; k < parts.length; k++) newAsteroids.push(parts[k]);
           if (!this.powerUpSpawned) {
             this.killsSinceSpawn++;
             const guaranteed = this.killsSinceSpawn >= 5;
@@ -649,8 +669,9 @@ export class AsteroidsEngine {
         }
       }
     }
-    this.asteroids = this.asteroids.filter((a) => !a.dead).concat(newAsteroids);
-    this.bullets = this.bullets.filter((b) => !b.dead);
+    compact(this.asteroids);
+    for (let i = 0; i < newAsteroids.length; i++) this.asteroids.push(newAsteroids[i]);
+    compact(this.bullets);
     // Nave vs asteroide
     if (this.ship.invincible <= 0) {
       for (const a of this.asteroids) {
@@ -679,10 +700,6 @@ export class AsteroidsEngine {
     ctx.translate(x, y);
     ctx.rotate(-Math.PI / 2);
     ctx.scale(s, s);
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = p.ship;
-    }
     ctx.strokeStyle = p.ship;
     ctx.lineWidth = 1.2;
     ctx.lineJoin = 'round';
@@ -699,10 +716,6 @@ export class AsteroidsEngine {
     const ctx = this.ctx!;
     const p = this.palette;
     const s = this.uiScale();
-    if (p.glow) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = p.hud;
-    }
     ctx.fillStyle = p.hud;
     ctx.font = `${15 * s}px monospace`;
     ctx.textAlign = 'left';
@@ -713,10 +726,8 @@ export class AsteroidsEngine {
     if (this.ship.tripleShot > 0) {
       ctx.textAlign = 'left';
       ctx.fillStyle = p.accent;
-      if (p.glow) ctx.shadowColor = p.accent;
       ctx.fillText(`3x  ${this.ship.tripleShot.toFixed(1)}s`, 14 * s, 46 * s);
     }
-    ctx.shadowBlur = 0;
   }
   private drawOverlay(title: string, sub: string) {
     const ctx = this.ctx!;
@@ -742,10 +753,10 @@ export class AsteroidsEngine {
     const p = this.palette;
     ctx.fillStyle = p.bg;
     ctx.fillRect(0, 0, this.W, this.H);
-    this.particles.forEach((pt) => pt.draw(ctx, p));
-    this.asteroids.forEach((a) => a.draw(ctx, p));
-    this.powerUps.forEach((pu) => pu.draw(ctx, p));
-    this.bullets.forEach((b) => b.draw(ctx, p));
+    for (let i = 0; i < this.particles.length; i++) this.particles[i].draw(ctx, p);
+    for (let i = 0; i < this.asteroids.length; i++) this.asteroids[i].draw(ctx, p);
+    for (let i = 0; i < this.powerUps.length; i++) this.powerUps[i].draw(ctx, p);
+    for (let i = 0; i < this.bullets.length; i++) this.bullets[i].draw(ctx, p);
     this.ship.draw(ctx, p);
     this.drawHUD();
     if (this.phase === 'gameover')
@@ -764,10 +775,21 @@ export class AsteroidsEngine {
   // ── Notificación de estado ───────────────────────────────────────────────────────
   private emitState(force = false) {
     if (!this.onState) return;
-    const s = this.getState();
-    const key = `${s.score}|${s.lives}|${s.level}|${s.tripleShot.toFixed(1)}|${s.phase}`;
-    if (!force && key === this.lastSnapshotKey) return;
-    this.lastSnapshotKey = key;
-    this.onState(s);
+    const triple10 = Math.round(Math.max(0, this.ship?.tripleShot ?? 0) * 10);
+    if (
+      !force &&
+      this.score === this.lastScore &&
+      this.lives === this.lastLives &&
+      this.level === this.lastLevel &&
+      triple10 === this.lastTriple10 &&
+      this.phase === this.lastPhase
+    )
+      return;
+    this.lastScore = this.score;
+    this.lastLives = this.lives;
+    this.lastLevel = this.level;
+    this.lastTriple10 = triple10;
+    this.lastPhase = this.phase;
+    this.onState(this.getState());
   }
 }

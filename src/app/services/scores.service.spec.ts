@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ScoresService } from './scores.service';
-import { provideSupabaseMock, scoreRow } from '../testing/supabase-mock';
+import { provideSupabaseMock, scoreRow, scorePerfilRow } from '../testing/supabase-mock';
 describe('ScoresService', () => {
   const setup = (data = {}) => {
     TestBed.configureTestingModule({ providers: [provideSupabaseMock(data)] });
@@ -31,5 +31,27 @@ describe('ScoresService', () => {
     const res = await service.save({ game: 'asteroides', score: 1, name: 'A' });
     expect(res.ok).toBe(false);
     expect(res.error).toBe('boom');
+  });
+  it('porUsuario devuelve las puntuaciones del usuario con su perfil unido', async () => {
+    const service = setup({
+      scoresConPerfil: [
+        scorePerfilRow('snake', 'MORPHEUS', 500, 'morpheus', 'google'),
+        scorePerfilRow('caida', 'MORPHEUS', 320, 'morpheus', 'google'),
+      ],
+    });
+    const rows = await service.porUsuario('user-1');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      game: 'snake',
+      name: 'MORPHEUS',
+      score: 500,
+      username: 'morpheus',
+      provider: 'google',
+    });
+    expect(rows[0].date).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+  });
+  it('porUsuario sin puntuaciones devuelve []', async () => {
+    const service = setup({ scoresConPerfil: [] });
+    expect(await service.porUsuario('user-1')).toEqual([]);
   });
 });

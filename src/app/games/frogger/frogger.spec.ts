@@ -1,14 +1,21 @@
+import { signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Frogger } from './frogger';
 import { ScoresService } from '../../services/scores.service';
+import { SessionService } from '../../services/session.service';
 describe('Frogger (componente)', () => {
+  let user: WritableSignal<{ name: string } | null>;
   beforeEach(() => {
+    user = signal<{ name: string } | null>({ name: 'KAI' });
     // Neutraliza el bucle del motor en jsdom (afterNextRender no arranca RAF real).
     vi.stubGlobal('requestAnimationFrame', () => 0);
     vi.stubGlobal('cancelAnimationFrame', () => {});
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: '', component: Frogger }])],
+      providers: [
+        provideRouter([{ path: '', component: Frogger }]),
+        { provide: SessionService, useValue: { user } },
+      ],
     });
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -31,6 +38,13 @@ describe('Frogger (componente)', () => {
     expect(comp.phase()).toBe('playing');
     expect(comp.saved()).toBe(false);
   });
+  it('applyState autodispara el guardado al entrar en gameover con sesión iniciada', () => {
+    const scores = TestBed.inject(ScoresService);
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
+    const comp = TestBed.createComponent(Frogger).componentInstance as any;
+    comp.applyState({ score: 777, lives: 0, level: 3, timeLeft: 0, phase: 'gameover' });
+    expect(spy).toHaveBeenCalledWith({ game: 'frogger', score: 777, name: 'KAI' });
+  });
   it('guardar no funciona jugando, sí en gameover (game: "frogger"), sin doble guardado', async () => {
     const scores = TestBed.inject(ScoresService);
     const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
@@ -40,10 +54,20 @@ describe('Frogger (componente)', () => {
     comp.phase.set('gameover');
     comp.score.set(1234);
     await comp.save();
-    expect(spy).toHaveBeenCalledWith({ game: 'frogger', score: 1234, name: 'INVITADO' });
+    expect(spy).toHaveBeenCalledWith({ game: 'frogger', score: 1234, name: 'KAI' });
     expect(comp.saved()).toBe(true);
     spy.mockClear();
     await comp.save(); // ya guardado → no repite
+    expect(spy).not.toHaveBeenCalled();
+  });
+  it('sin sesión no guarda: el guard corta antes de llamar al Salón', async () => {
+    const scores = TestBed.inject(ScoresService);
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
+    user.set(null);
+    const comp = TestBed.createComponent(Frogger).componentInstance as any;
+    comp.phase.set('gameover');
+    comp.score.set(1234);
+    await comp.save();
     expect(spy).not.toHaveBeenCalled();
   });
   it('si el guardado falla no marca guardado y expone el error', async () => {

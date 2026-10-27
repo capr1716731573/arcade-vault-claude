@@ -1,0 +1,59 @@
+<div class="auth-card">
+  <div class="auth-header">
+    <div class="mark" aria-hidden="true"></div>
+    <h2 class="neon-cyan">NUEVA CONTRASEÑA</h2>
+    <div class="mono" style="font-size: 11px; color: var(--ink-faint); letter-spacing: 0.16em; margin-top: 6px">
+      ELIGE UNA CLAVE NUEVA
+    </div>
+  </div>
+  @if (done()) {
+    <div class="slide-in" role="status" aria-live="polite" style="text-align: center; padding: 8px 0">
+      <div class="pixel neon-cyan" style="font-size: 12px; margin-bottom: 12px">CONTRASEÑA ACTUALIZADA</div>
+      <p class="mono" style="font-size: 12px; color: var(--ink-faint); line-height: 1.7; letter-spacing: 0.04em">
+        Ya puedes entrar al Vault con tu nueva contraseña.
+      </p>
+      <a routerLink="/" class="btn lg" style="width: 100%; margin-top: 16px">ENTRAR AL VAULT</a>
+    </div>
+  } @else {
+    <form (submit)="submit($event)">
+      <div class="field">
+        <label for="nc-pass">Contraseña nueva</label>
+        <input
+          id="nc-pass"
+          type="password"
+          autocomplete="new-password"
+          placeholder="••••••••"
+          [value]="password()"
+          (input)="password.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label for="nc-pass2">Repite la contraseña</label>
+        <input
+          id="nc-pass2"
+          type="password"
+          autocomplete="new-password"
+          placeholder="••••••••"
+          [value]="password2()"
+          (input)="password2.set($any($event.target).value)"
+        />
+      </div>
+      @if (error(); as err) {
+        <p role="alert" aria-live="assertive" style="color: var(--magenta); font-size: 12px; margin: 12px 0 0; letter-spacing: 0.04em">
+          {{ err }}
+        </p>
+      }
+      <button class="btn lg" type="submit" [disabled]="loading() || !ready()" style="width: 100%; margin-top: 8px">
+        {{ loading() ? 'GUARDANDO…' : 'GUARDAR CONTRASEÑA' }}
+      </button>
+      @if (!ready() && !error()) {
+        <p class="mono" aria-live="polite" style="text-align: center; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em; margin-top: 10px">
+          Validando enlace de recuperación…
+        </p>
+      }
+    </form>
+    <a routerLink="/acceso/recuperar" style="display: block; text-align: center; margin-top: 12px; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em">
+      Pedir un enlace nuevo
+    </a>
+  }
+</div>

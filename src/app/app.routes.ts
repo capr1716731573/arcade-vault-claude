@@ -2,8 +2,13 @@ import { Routes } from '@angular/router';
 import { About } from './about/about';
 import { Asteroids } from './games/asteroids/asteroids';
 import { Auth } from './auth/auth';
+import { AuthCallback } from './auth/callback/callback';
+import { NuevaClave } from './auth/nueva-clave/nueva-clave';
+import { Recuperar } from './auth/recuperar/recuperar';
+import { authGuard } from './services/auth.guard';
 import { BloqueBuster } from './games/bloque-buster/bloque-buster';
 import { Caida } from './games/caida/caida';
+import { Cuenta } from './cuenta/cuenta';
 import { Frogger } from './games/frogger/frogger';
 import { GameDetail } from './game-detail/game-detail';
 import { GamePlayer } from './game-player/game-player';
@@ -21,7 +26,11 @@ export const routes: Routes = [
   { path: 'jugar/snake', component: Snake },
   { path: 'jugar/frogger', component: Frogger },
   { path: 'jugar/:id', component: GamePlayer },
+  { path: 'acceso/callback', component: AuthCallback },
+  { path: 'acceso/recuperar', component: Recuperar },
+  { path: 'acceso/nueva-clave', component: NuevaClave },
   { path: 'acceso', component: Auth },
+  { path: 'cuenta', component: Cuenta, canActivate: [authGuard] },
   { path: 'salon', component: HallOfFame },
   { path: 'acerca', component: About },
   { path: '**', redirectTo: '' },

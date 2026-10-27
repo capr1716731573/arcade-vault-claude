@@ -1,6 +1,6 @@
 # SPEC 14 — Autenticación con Supabase (registro, login y sesión)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04 (SupabaseService + persistencia de sesión reservada para este spec), SPEC 06 (tabla `scores`, su RLS y `ScoresService`, que aquí se endurecen)
 > **Fecha:** 2026-10-26
 > **Objetivo:** Sustituir la autenticación simulada por autenticación real de Supabase —registro y login con email confirmado, Google y GitHub—, con sesión persistida, recuperación de contraseña, página de cuenta y guardado de puntuación restringido a usuarios autenticados.

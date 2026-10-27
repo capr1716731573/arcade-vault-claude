@@ -4,6 +4,7 @@ import {
   NgZone,
   OnDestroy,
   afterNextRender,
+  computed,
   inject,
   signal,
   viewChild,
@@ -39,7 +40,8 @@ export class Snake implements OnDestroy {
   protected readonly saved = signal(false);
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
-  protected readonly name = signal(inject(SessionService).user()?.name ?? 'INVITADO');
+  protected readonly session = inject(SessionService);
+  protected readonly name = computed(() => this.session.user()?.name ?? 'INVITADO');
   // Skin del juego (dark-only): clasico (default), neon, retro. Persistido por juego.
   protected readonly skin = signal<GameSkin>('clasico');
   protected readonly skinOptions: readonly { id: GameSkin; label: string }[] = [
@@ -96,6 +98,17 @@ export class Snake implements OnDestroy {
       this.saved.set(false);
       this.saveError.set(null);
     }
+    // Guardado automático al terminar la partida con sesión iniciada (sin pulsar el botón);
+    // los guardas de save() evitan duplicados y !saveError() evita un bucle de reintentos.
+    if (
+      s.phase === 'gameover' &&
+      this.session.user() &&
+      !this.saved() &&
+      !this.saving() &&
+      !this.saveError()
+    ) {
+      void this.save();
+    }
   }
   protected togglePause() {
     const engine = this.engine;
@@ -131,11 +144,9 @@ export class Snake implements OnDestroy {
       return null;
     }
   }
-  protected setName(value: string) {
-    this.name.set(value.toUpperCase().slice(0, 12));
-  }
   protected async save() {
-    if (this.phase() !== 'gameover' || this.saved() || this.saving()) return;
+    if (!this.session.user() || this.phase() !== 'gameover' || this.saved() || this.saving())
+      return;
     this.saving.set(true);
     this.saveError.set(null);
     const res = await this.scores.save({

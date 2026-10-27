@@ -124,18 +124,20 @@
     @if (saved()) {
       <div class="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
     } @else {
-      <div class="input-row">
-        <input
-          placeholder="TUS INICIALES"
-          aria-label="Tus iniciales"
-          [value]="name()"
-          [disabled]="saving()"
-          (input)="setName($any($event.target).value)"
-        />
-        <button type="button" class="btn yellow" [disabled]="saving()" (click)="save()">
-          {{ saving() ? 'GUARDANDO…' : saveError() ? 'REINTENTAR' : 'GUARDAR PUNTUACIÓN' }}
-        </button>
-      </div>
+      @if (session.user()) {
+        <div class="mono" style="color: var(--ink-faint); font-size: 11px; letter-spacing: 0.08em; margin-bottom: 8px">
+          GUARDAR COMO {{ name() }}
+        </div>
+        <div class="input-row">
+          <button type="button" class="btn yellow" [disabled]="saving()" (click)="save()">
+            {{ saving() ? 'GUARDANDO…' : saveError() ? 'REINTENTAR' : 'GUARDAR PUNTUACIÓN' }}
+          </button>
+        </div>
+      } @else {
+        <a routerLink="/acceso" class="btn yellow" style="display: inline-block; text-decoration: none">
+          INICIA SESIÓN PARA GUARDAR
+        </a>
+      }
       @if (saveError()) {
         <div
           class="mono"

@@ -55,6 +55,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          provider: string | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          provider?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          provider?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       scores: {
         Row: {
           created_at: string
@@ -62,6 +89,7 @@ export type Database = {
           id: string
           name: string
           score: number
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -69,6 +97,7 @@ export type Database = {
           id?: string
           name: string
           score: number
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -76,6 +105,7 @@ export type Database = {
           id?: string
           name?: string
           score?: number
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -89,7 +119,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      scores_con_perfil: {
+        Row: {
+          created_at: string | null
+          game_id: string | null
+          id: string | null
+          name: string | null
+          perfil_provider: string | null
+          perfil_username: string | null
+          score: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scores_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

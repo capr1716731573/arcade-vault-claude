@@ -1,3 +1,4 @@
+import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../environments/environment';
 import { SupabaseService } from './supabase.service';
@@ -27,13 +28,26 @@ describe('SupabaseService', () => {
     expect(url).toBe(environment.supabase.url);
     expect(key).toBe(environment.supabase.key);
   });
-  it('configura el cliente SSR-safe (persistSession/autoRefreshToken/detectSessionInUrl en false)', () => {
+  it('en navegador activa persistencia de sesión y flujo PKCE', () => {
+    TestBed.configureTestingModule({ providers: [{ provide: PLATFORM_ID, useValue: 'browser' }] });
+    TestBed.inject(SupabaseService);
+    const options = createClientMock.mock.calls[0][2];
+    expect(options.auth).toEqual({
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+    });
+  });
+  it('en servidor (SSR) no persiste la sesión ni toca localStorage/window', () => {
+    TestBed.configureTestingModule({ providers: [{ provide: PLATFORM_ID, useValue: 'server' }] });
     TestBed.inject(SupabaseService);
     const options = createClientMock.mock.calls[0][2];
     expect(options.auth).toEqual({
       persistSession: false,
       autoRefreshToken: false,
       detectSessionInUrl: false,
+      flowType: 'pkce',
     });
   });
 });

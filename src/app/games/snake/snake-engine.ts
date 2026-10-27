@@ -173,7 +173,13 @@ export class SnakeEngine {
   private destroyed = false;
   private listening = false;
   private resizeObserver: ResizeObserver | null = null;
-  private lastSnapshotKey = '';
+  // Fondo estático cacheado (bg + rejilla): se repinta solo en resize()/setSkin(), nunca por frame.
+  private bgCanvas: HTMLCanvasElement | null = null;
+  // Último estado observable emitido (comparación campo a campo; sin construir string key por frame).
+  private lastScore = -1;
+  private lastLength = -1;
+  private lastSpeed = -1;
+  private lastPhase: SnakePhase | '' = '';
   private readonly onKeyDown = (e: KeyboardEvent) => {
     const d = DIR_FROM_CODE[e.code];
     if (d) this.turn(d);
@@ -235,6 +241,7 @@ export class SnakeEngine {
   /** Cambia el skin (clasico/neon/retro); si está pausado/parado, redibuja ya. */
   setSkin(skin: GameSkin) {
     this.skin = skin;
+    this.buildBackground();
     if (!this.running) this.draw();
   }
   /** Cancela el RAF, quita listeners de teclado y el observador de tamaño. */
@@ -287,6 +294,7 @@ export class SnakeEngine {
     this.canvas.width = Math.max(1, Math.round(cssW * dpr));
     this.canvas.height = Math.max(1, Math.round(cssH * dpr));
     this.ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.buildBackground();
   }
   // ── Setup de partida ───────────────────────────────────────────────────────────
   private initGame() {
@@ -406,8 +414,9 @@ export class SnakeEngine {
     const s = cell - pad * 2;
     const r = Math.min(6, s * 0.3);
     ctx.save();
-    if (p.glow) {
-      ctx.shadowBlur = head ? p.glow + 6 : p.glow;
+    // Glow (shadowBlur) solo en la cabeza (protagonista); el cuerpo va con relleno plano.
+    if (head && p.glow) {
+      ctx.shadowBlur = p.glow + 6;
       ctx.shadowColor = p.snakeGlow;
     }
     ctx.fillStyle = head ? p.head : p.body;
@@ -453,30 +462,59 @@ export class SnakeEngine {
     ctx.fillStyle = p.overlaySub;
     ctx.fillText(sub, this.W / 2, this.H / 2 + 20 * s);
   }
+  /** Repinta el fondo estático (bg + rejilla) en un buffer offscreen; se vuelca con un solo drawImage por frame. */
+  private buildBackground() {
+    if (typeof document === 'undefined') return;
+    const bw = this.canvas.width;
+    const bh = this.canvas.height;
+    if (bw < 1 || bh < 1) return;
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+    let bg = this.bgCanvas;
+    if (!bg) {
+      bg = document.createElement('canvas');
+      this.bgCanvas = bg;
+    }
+    bg.width = bw;
+    bg.height = bh;
+    const bctx = bg.getContext('2d');
+    if (!bctx) return;
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const p = this.palette;
+    bctx.fillStyle = p.bg;
+    bctx.fillRect(0, 0, this.W, this.H);
+    const cell = Math.min(this.W, this.H) / GRID;
+    const ox = (this.W - cell * GRID) / 2;
+    const oy = (this.H - cell * GRID) / 2;
+    bctx.translate(ox, oy);
+    bctx.strokeStyle = p.grid;
+    bctx.lineWidth = 1;
+    for (let i = 1; i < GRID; i++) {
+      bctx.beginPath();
+      bctx.moveTo(i * cell, 0);
+      bctx.lineTo(i * cell, GRID * cell);
+      bctx.stroke();
+      bctx.beginPath();
+      bctx.moveTo(0, i * cell);
+      bctx.lineTo(GRID * cell, i * cell);
+      bctx.stroke();
+    }
+  }
   private draw() {
     const ctx = this.ctx;
     if (!ctx) return;
     const p = this.palette;
-    ctx.fillStyle = p.bg;
-    ctx.fillRect(0, 0, this.W, this.H);
+    // Fondo estático (bg + rejilla) desde el buffer cacheado: un único drawImage por frame.
+    if (!this.bgCanvas) this.buildBackground();
+    if (this.bgCanvas) ctx.drawImage(this.bgCanvas, 0, 0, this.W, this.H);
+    else {
+      ctx.fillStyle = p.bg;
+      ctx.fillRect(0, 0, this.W, this.H);
+    }
     const cell = Math.min(this.W, this.H) / GRID;
     const ox = (this.W - cell * GRID) / 2;
     const oy = (this.H - cell * GRID) / 2;
     ctx.save();
     ctx.translate(ox, oy);
-    // Rejilla
-    ctx.strokeStyle = p.grid;
-    ctx.lineWidth = 1;
-    for (let i = 1; i < GRID; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * cell, 0);
-      ctx.lineTo(i * cell, GRID * cell);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(0, i * cell);
-      ctx.lineTo(GRID * cell, i * cell);
-      ctx.stroke();
-    }
     // Fruta
     if (this.fruit) this.drawFruit(ctx, this.fruit, cell, p);
     // Serpiente (de la cola a la cabeza, para que la cabeza quede encima)
@@ -500,10 +538,21 @@ export class SnakeEngine {
   // ── Notificación de estado ───────────────────────────────────────────────────────
   private emitState(force = false) {
     if (!this.onState) return;
+    // Comparación campo a campo: en estado estable no asigna ni objeto ni string key por frame.
+    const speed = Math.floor(this.fruitsEaten / 5) + 1;
+    if (
+      !force &&
+      this.score === this.lastScore &&
+      this.snake.length === this.lastLength &&
+      speed === this.lastSpeed &&
+      this.phase === this.lastPhase
+    )
+      return;
     const s = this.getState();
-    const key = `${s.score}|${s.length}|${s.speed}|${s.phase}`;
-    if (!force && key === this.lastSnapshotKey) return;
-    this.lastSnapshotKey = key;
+    this.lastScore = s.score;
+    this.lastLength = s.length;
+    this.lastSpeed = s.speed;
+    this.lastPhase = s.phase;
     this.onState(s);
   }
 }

@@ -1,15 +1,22 @@
+import { signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Caida } from './caida';
 import { ScoresService } from '../../services/scores.service';
+import { SessionService } from '../../services/session.service';
 describe('Caida (componente)', () => {
+  let user: WritableSignal<{ name: string } | null>;
   beforeEach(() => {
     localStorage.clear();
+    user = signal<{ name: string } | null>({ name: 'KAI' });
     // Neutraliza el bucle del motor en jsdom (afterNextRender no arranca RAF real).
     vi.stubGlobal('requestAnimationFrame', () => 0);
     vi.stubGlobal('cancelAnimationFrame', () => {});
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: '', component: Caida }])],
+      providers: [
+        provideRouter([{ path: '', component: Caida }]),
+        { provide: SessionService, useValue: { user } },
+      ],
     });
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -21,7 +28,7 @@ describe('Caida (componente)', () => {
     expect(el.querySelector('canvas.caida-next')).toBeTruthy();
     expect(el.querySelector('.hud-stat.level .v')?.textContent?.trim()).toBe('01');
   });
-  it('guardar solo funciona en gameover y envía game: "caida" al Salón, sin doble guardado', async () => {
+  it('guardar solo funciona en gameover y envía game: "caida" con el nombre de sesión, sin doble guardado', async () => {
     const scores = TestBed.inject(ScoresService);
     const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
     const comp = TestBed.createComponent(Caida).componentInstance as any;
@@ -30,10 +37,20 @@ describe('Caida (componente)', () => {
     comp.phase.set('gameover');
     comp.score.set(1234);
     await comp.save();
-    expect(spy).toHaveBeenCalledWith({ game: 'caida', score: 1234, name: 'INVITADO' });
+    expect(spy).toHaveBeenCalledWith({ game: 'caida', score: 1234, name: 'KAI' });
     expect(comp.saved()).toBe(true);
     spy.mockClear();
     await comp.save(); // ya guardado → no repite
+    expect(spy).not.toHaveBeenCalled();
+  });
+  it('sin sesión no guarda: el guard corta antes de llamar al Salón', async () => {
+    const scores = TestBed.inject(ScoresService);
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
+    user.set(null);
+    const comp = TestBed.createComponent(Caida).componentInstance as any;
+    comp.phase.set('gameover');
+    comp.score.set(1234);
+    await comp.save();
     expect(spy).not.toHaveBeenCalled();
   });
   it('si el guardado falla no marca guardado y expone el error', async () => {
@@ -55,6 +72,13 @@ describe('Caida (componente)', () => {
     expect(comp.level()).toBe(2);
     expect(comp.phase()).toBe('playing');
     expect(comp.saved()).toBe(false);
+  });
+  it('applyState autodispara el guardado al entrar en gameover con sesión iniciada', () => {
+    const scores = TestBed.inject(ScoresService);
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
+    const comp = TestBed.createComponent(Caida).componentInstance as any;
+    comp.applyState({ score: 777, lines: 5, level: 2, phase: 'gameover' });
+    expect(spy).toHaveBeenCalledWith({ game: 'caida', score: 777, name: 'KAI' });
   });
   it('togglePause alterna la pausa y llama al motor', () => {
     const comp = TestBed.createComponent(Caida).componentInstance as any;

@@ -13,6 +13,15 @@ export interface SaveResult {
   ok: boolean;
   error?: string;
 }
+/** Puntuación de un usuario con su perfil unido (vista `scores_con_perfil`, SPEC 15). */
+export interface ScoreConPerfil {
+  game: string;
+  name: string;
+  score: number;
+  date: string;
+  username: string | null;
+  provider: string | null;
+}
 /**
  * Leaderboard real sobre la tabla `scores` de Supabase. Lee/escribe siempre a
  * través del `SupabaseService` (ningún componente consulta Supabase directamente).
@@ -28,6 +37,26 @@ export class ScoresService {
   /** Mejores `count` marcas de un juego (para el Salón de la Fama). */
   hallOfFame(gameId: string, count = 12): Promise<ScoreRow[]> {
     return this.query(gameId, count);
+  }
+  /**
+   * Puntuaciones de un usuario con su perfil unido (SPEC 15), leídas de la
+   * vista `scores_con_perfil` filtrando por `user_id` y ordenadas por score.
+   */
+  async porUsuario(userId: string): Promise<ScoreConPerfil[]> {
+    const { data, error } = await this.supabase.client
+      .from('scores_con_perfil')
+      .select('game_id, name, score, created_at, perfil_username, perfil_provider')
+      .eq('user_id', userId)
+      .order('score', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => ({
+      game: r.game_id ?? '',
+      name: r.name ?? '',
+      score: r.score ?? 0,
+      date: r.created_at ? this.formatDate(r.created_at) : '',
+      username: r.perfil_username,
+      provider: r.perfil_provider,
+    }));
   }
   /** Inserta una marca. Devuelve {ok:false, error} si Supabase rechaza. */
   async save(entry: SavedScore): Promise<SaveResult> {
