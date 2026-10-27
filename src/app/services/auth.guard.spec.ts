@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
-import { authGuard } from './auth.guard';
+import { authGuard, guestGuard } from './auth.guard';
 import { provideSupabaseMock, type AuthUserRow } from '../testing/supabase-mock';
+const user: AuthUserRow = { id: 'u1', email: 'kai@vault.gg', app_metadata: { provider: 'email' } };
 describe('authGuard', () => {
-  const user: AuthUserRow = { id: 'u1', email: 'kai@vault.gg', app_metadata: { provider: 'email' } };
   const run = () =>
     TestBed.runInInjectionContext(() =>
       (authGuard as (r: unknown, s: unknown) => unknown)({}, {}),
@@ -17,5 +17,21 @@ describe('authGuard', () => {
     const r = await run();
     expect(r).toBeInstanceOf(UrlTree);
     expect(TestBed.inject(Router).serializeUrl(r as UrlTree)).toBe('/acceso');
+  });
+});
+describe('guestGuard', () => {
+  const run = () =>
+    TestBed.runInInjectionContext(() =>
+      (guestGuard as (r: unknown, s: unknown) => unknown)({}, {}),
+    ) as Promise<boolean | UrlTree>;
+  it('redirige a /cuenta cuando ya hay sesión', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideSupabaseMock({ authUser: user })] });
+    const r = await run();
+    expect(r).toBeInstanceOf(UrlTree);
+    expect(TestBed.inject(Router).serializeUrl(r as UrlTree)).toBe('/cuenta');
+  });
+  it('deja pasar al invitado cuando no hay sesión', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideSupabaseMock({ authUser: null })] });
+    expect(await run()).toBe(true);
   });
 });

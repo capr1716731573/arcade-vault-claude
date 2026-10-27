@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { SessionService } from '../services/session.service';
+import { validatePassword } from './password-policy';
 @Component({
   selector: 'app-auth',
   imports: [RouterLink],
@@ -56,6 +57,12 @@ export class Auth {
     if (!username) {
       this.loading.set(false);
       this.error.set('Elige un nombre de jugador.');
+      return;
+    }
+    const policyError = validatePassword(password);
+    if (policyError) {
+      this.loading.set(false);
+      this.error.set(policyError);
       return;
     }
     const r = await this.session.register(email, password, username);
