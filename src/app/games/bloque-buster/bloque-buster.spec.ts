@@ -1,15 +1,22 @@
+import { signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { BloqueBuster } from './bloque-buster';
 import { ScoresService } from '../../services/scores.service';
+import { SessionService } from '../../services/session.service';
 describe('BloqueBuster (componente)', () => {
+  let user: WritableSignal<{ name: string } | null>;
   beforeEach(() => {
     localStorage.clear();
+    user = signal<{ name: string } | null>({ name: 'KAI' });
     // Neutraliza el bucle del motor en jsdom (afterNextRender no arranca RAF real).
     vi.stubGlobal('requestAnimationFrame', () => 0);
     vi.stubGlobal('cancelAnimationFrame', () => {});
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: '', component: BloqueBuster }])],
+      providers: [
+        provideRouter([{ path: '', component: BloqueBuster }]),
+        { provide: SessionService, useValue: { user } },
+      ],
     });
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -31,6 +38,13 @@ describe('BloqueBuster (componente)', () => {
     expect(comp.phase()).toBe('playing');
     expect(comp.saved()).toBe(false);
   });
+  it('applyState autodispara el guardado al entrar en estado terminal (win) con sesión iniciada', () => {
+    const scores = TestBed.inject(ScoresService);
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
+    const comp = TestBed.createComponent(BloqueBuster).componentInstance as any;
+    comp.applyState({ score: 777, lives: 0, level: 5, phase: 'win' });
+    expect(spy).toHaveBeenCalledWith({ game: 'bloque-buster', score: 777, name: 'KAI' });
+  });
   it('guardar no funciona jugando, sí en gameover (game: "bloque-buster"), sin doble guardado', async () => {
     const scores = TestBed.inject(ScoresService);
     const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
@@ -40,10 +54,20 @@ describe('BloqueBuster (componente)', () => {
     comp.phase.set('gameover');
     comp.score.set(1234);
     await comp.save();
-    expect(spy).toHaveBeenCalledWith({ game: 'bloque-buster', score: 1234, name: 'INVITADO' });
+    expect(spy).toHaveBeenCalledWith({ game: 'bloque-buster', score: 1234, name: 'KAI' });
     expect(comp.saved()).toBe(true);
     spy.mockClear();
     await comp.save(); // ya guardado → no repite
+    expect(spy).not.toHaveBeenCalled();
+  });
+  it('sin sesión no guarda: el guard corta antes de llamar al Salón', async () => {
+    const scores = TestBed.inject(ScoresService);
+    const spy = vi.spyOn(scores, 'save').mockResolvedValue({ ok: true });
+    user.set(null);
+    const comp = TestBed.createComponent(BloqueBuster).componentInstance as any;
+    comp.phase.set('gameover');
+    comp.score.set(1234);
+    await comp.save();
     expect(spy).not.toHaveBeenCalled();
   });
   it('guardar también funciona en win', async () => {
@@ -53,7 +77,7 @@ describe('BloqueBuster (componente)', () => {
     comp.phase.set('win');
     comp.score.set(999);
     await comp.save();
-    expect(spy).toHaveBeenCalledWith({ game: 'bloque-buster', score: 999, name: 'INVITADO' });
+    expect(spy).toHaveBeenCalledWith({ game: 'bloque-buster', score: 999, name: 'KAI' });
     expect(comp.saved()).toBe(true);
   });
   it('si el guardado falla no marca guardado y expone el error', async () => {

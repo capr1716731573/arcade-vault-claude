@@ -80,6 +80,8 @@ export const PIECES: (number[][] | null)[] = [
 export const LINE_SCORES = [0, 100, 300, 500, 800];
 /** Intervalo de caída suave (soft-drop) mientras se mantiene ↓, en ms. */
 const SOFT_DROP_MS = 45;
+/** Wall-kicks de rotación como constante de módulo (cero asignación por rotación). */
+const WALL_KICKS = [0, -1, 1, -2, 2] as const;
 /** Rotación horaria pura (transpuesta + inversión). Exportada para tests. */
 export function rotateCW(shape: number[][]): number[][] {
   const rows = shape.length;
@@ -226,7 +228,13 @@ export class CaidaEngine {
   private destroyed = false;
   private listening = false;
   private resizeObserver: ResizeObserver | null = null;
-  private lastSnapshotKey = '';
+  // Buffer offscreen del fondo estático (bg + rejilla); se repinta solo en resize()/setSkin().
+  private bgCanvas: HTMLCanvasElement | null = null;
+  // Último estado emitido (comparación campo a campo: cero asignaciones por frame en estado estable).
+  private lastScore = -1;
+  private lastLines = -1;
+  private lastLevel = -1;
+  private lastPhase: CaidaPhase | '' = '';
   private readonly onKeyDown = (e: KeyboardEvent) => {
     if (GAME_KEYS.has(e.code)) e.preventDefault();
     this.setKey(e.code, true);
@@ -290,6 +298,7 @@ export class CaidaEngine {
   /** Cambia el skin (clasico/neon/retro); si está pausado/parado, redibuja ya. */
   setSkin(skin: GameSkin) {
     this.skin = skin;
+    this.buildBg();
     if (!this.running) this.draw();
     this.drawNext();
   }
@@ -358,6 +367,43 @@ export class CaidaEngine {
       this.nextCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.drawNext();
     }
+    this.buildBg();
+  }
+  /** (Re)construye el buffer offscreen del fondo estático (bg + rejilla) al tamaño del plano lógico. */
+  private buildBg() {
+    if (!this.ctx || typeof document === 'undefined') return;
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+    const pxW = Math.max(1, Math.round(this.W * dpr));
+    const pxH = Math.max(1, Math.round(this.H * dpr));
+    if (!this.bgCanvas) this.bgCanvas = document.createElement('canvas');
+    this.bgCanvas.width = pxW;
+    this.bgCanvas.height = pxH;
+    const bctx = this.bgCanvas.getContext('2d');
+    if (!bctx) return;
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const p = this.palette;
+    bctx.fillStyle = p.bg;
+    bctx.fillRect(0, 0, this.W, this.H);
+    const cell = Math.min(this.W / COLS, this.H / ROWS);
+    const ox = (this.W - cell * COLS) / 2;
+    const oy = (this.H - cell * ROWS) / 2;
+    bctx.save();
+    bctx.translate(ox, oy);
+    bctx.strokeStyle = p.grid;
+    bctx.lineWidth = 1;
+    for (let c = 1; c < COLS; c++) {
+      bctx.beginPath();
+      bctx.moveTo(c * cell, 0);
+      bctx.lineTo(c * cell, ROWS * cell);
+      bctx.stroke();
+    }
+    for (let r = 1; r < ROWS; r++) {
+      bctx.beginPath();
+      bctx.moveTo(0, r * cell);
+      bctx.lineTo(COLS * cell, r * cell);
+      bctx.stroke();
+    }
+    bctx.restore();
   }
   // ── Setup de partida ───────────────────────────────────────────────────────────
   private randomPiece(): Piece {
@@ -395,7 +441,7 @@ export class CaidaEngine {
   /** Rota la pieza actual con wall-kicks [0, -1, 1, -2, 2]. */
   tryRotate() {
     const rotated = rotateCW(this.current.shape);
-    for (const kick of [0, -1, 1, -2, 2]) {
+    for (const kick of WALL_KICKS) {
       if (!this.collide(rotated, this.current.x + kick, this.current.y)) {
         this.current.shape = rotated;
         this.current.x += kick;
@@ -492,6 +538,7 @@ export class CaidaEngine {
   private get palette(): CaidaPalette {
     return SKIN_PALETTES[this.skin];
   }
+  /** Celda con relleno plano (sin glow): el glow del skin se reserva a la pieza activa (≤1/frame). */
   private drawBlock(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -502,19 +549,12 @@ export class CaidaEngine {
     alpha = 1,
   ) {
     if (!colorIndex) return;
-    const color = p.blocks[colorIndex]!;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    if (p.glow && alpha === 1) {
-      ctx.shadowBlur = p.glow;
-      ctx.shadowColor = color;
-    }
-    ctx.fillStyle = color;
+    if (alpha !== 1) ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.blocks[colorIndex]!;
     ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, cell - 2);
-    ctx.shadowBlur = 0;
     ctx.fillStyle = p.highlight;
     ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, Math.max(2, cell * 0.13));
-    ctx.restore();
+    if (alpha !== 1) ctx.globalAlpha = 1;
   }
   private drawOverlay(title: string, sub: string) {
     const ctx = this.ctx!;
@@ -534,29 +574,19 @@ export class CaidaEngine {
     const ctx = this.ctx;
     if (!ctx) return;
     const p = this.palette;
-    ctx.fillStyle = p.bg;
-    ctx.fillRect(0, 0, this.W, this.H);
+    // Fondo estático (bg + rejilla) cacheado en offscreen: un único drawImage por frame.
+    if (!this.bgCanvas) this.buildBg();
+    if (this.bgCanvas) ctx.drawImage(this.bgCanvas, 0, 0, this.W, this.H);
+    else {
+      ctx.fillStyle = p.bg;
+      ctx.fillRect(0, 0, this.W, this.H);
+    }
     // Celdas cuadradas centradas (mantiene el aspecto 10×20 pase lo que pase).
     const cell = Math.min(this.W / COLS, this.H / ROWS);
     const ox = (this.W - cell * COLS) / 2;
     const oy = (this.H - cell * ROWS) / 2;
     ctx.save();
     ctx.translate(ox, oy);
-    // Rejilla
-    ctx.strokeStyle = p.grid;
-    ctx.lineWidth = 1;
-    for (let c = 1; c < COLS; c++) {
-      ctx.beginPath();
-      ctx.moveTo(c * cell, 0);
-      ctx.lineTo(c * cell, ROWS * cell);
-      ctx.stroke();
-    }
-    for (let r = 1; r < ROWS; r++) {
-      ctx.beginPath();
-      ctx.moveTo(0, r * cell);
-      ctx.lineTo(COLS * cell, r * cell);
-      ctx.stroke();
-    }
     // Tablero
     for (let r = 0; r < ROWS; r++)
       for (let c = 0; c < COLS; c++) this.drawBlock(ctx, c, r, this.board[r][c], cell, p);
@@ -619,10 +649,18 @@ export class CaidaEngine {
   // ── Notificación de estado ───────────────────────────────────────────────────────
   private emitState(force = false) {
     if (!this.onState) return;
-    const s = this.getState();
-    const key = `${s.score}|${s.lines}|${s.level}|${s.phase}`;
-    if (!force && key === this.lastSnapshotKey) return;
-    this.lastSnapshotKey = key;
-    this.onState(s);
+    if (
+      !force &&
+      this.score === this.lastScore &&
+      this.lines === this.lastLines &&
+      this.level === this.lastLevel &&
+      this.phase === this.lastPhase
+    )
+      return;
+    this.lastScore = this.score;
+    this.lastLines = this.lines;
+    this.lastLevel = this.level;
+    this.lastPhase = this.phase;
+    this.onState(this.getState());
   }
 }

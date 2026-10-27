@@ -15,9 +15,9 @@
     <span>CRÉDITOS · 03</span>
   </div>
   @if (session.user(); as user) {
-    <button type="button" class="btn ghost auth-btn" (click)="session.logout()">
+    <a class="btn ghost auth-btn" routerLink="/cuenta" [class.active]="inCuenta()">
       {{ user.name }} ▾
-    </button>
+    </a>
   } @else {
     <a class="btn auth-btn" routerLink="/acceso">Iniciar Sesión</a>
   }
@@ -25,7 +25,6 @@
     ≡
   </button>
 </nav>
-
 <div class="av-mobile-backdrop" [class.open]="open()" (click)="open.set(false)"></div>
 <aside class="av-mobile-panel" [class.open]="open()" [attr.inert]="open() ? null : ''">
   <div class="pixel neon-cyan" style="font-size: 11px; margin-bottom: 16px">MENÚ</div>
@@ -33,7 +32,11 @@
   <a routerLink="/" [class.active]="inLibrary()" (click)="open.set(false)">Biblioteca</a>
   <a routerLink="/salon" [class.active]="inHall()" (click)="open.set(false)">Salón de la Fama</a>
   <a routerLink="/acerca" [class.active]="inAbout()" (click)="open.set(false)">Acerca de</a>
-  <a routerLink="/acceso" [class.active]="inAuth()" (click)="open.set(false)">
+  <a
+    [routerLink]="session.user() ? '/cuenta' : '/acceso'"
+    [class.active]="inAuth() || inCuenta()"
+    (click)="open.set(false)"
+  >
     {{ session.user() ? 'Cuenta' : 'Iniciar Sesión' }}
   </a>
   <div style="flex: 1"></div>

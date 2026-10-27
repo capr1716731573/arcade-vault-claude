@@ -1,0 +1,22 @@
+<div class="auth-card" style="text-align: center">
+  <div class="mark" aria-hidden="true"></div>
+  @if (error(); as err) {
+    <div class="pixel" style="font-size: 12px; color: var(--magenta); margin: 8px 0 12px">
+      NO SE PUDO ACCEDER
+    </div>
+    <p role="alert" style="color: var(--magenta); font-size: 12px; line-height: 1.6; letter-spacing: 0.04em">
+      {{ err }}
+    </p>
+    <a routerLink="/acceso" class="btn ghost" style="width: 100%; margin-top: 16px">
+      VOLVER AL ACCESO
+    </a>
+  } @else {
+    <div class="pixel blink" style="font-size: 12px; color: var(--cyan); margin: 8px 0 16px">
+      FINALIZANDO ACCESO…
+    </div>
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="mono" aria-live="polite" style="font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em; margin-top: 14px">
+      Conectando con el Vault.
+    </div>
+  }
+</div>

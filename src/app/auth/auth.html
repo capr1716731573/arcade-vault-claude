@@ -1,62 +1,105 @@
 <div class="auth-card">
   <div class="auth-header">
-    <div class="mark"></div>
+    <div class="mark" aria-hidden="true"></div>
     <h2 class="neon-cyan">ARCADE VAULT</h2>
     <div class="mono" style="font-size: 11px; color: var(--ink-faint); letter-spacing: 0.16em; margin-top: 6px">
       ACCESO AL SISTEMA · v2.6
     </div>
   </div>
-
-  <div class="auth-tabs">
-    <button type="button" [class.on]="tab() === 'in'" (click)="tab.set('in')">
-      INICIAR SESIÓN
-    </button>
-    <button type="button" [class.on]="tab() === 'up'" (click)="tab.set('up')">CREAR CUENTA</button>
-  </div>
-
-  <form (submit)="submit($event)">
-    <div class="field">
-      <label for="auth-user">Usuario</label>
-      <input
-        id="auth-user"
-        autocomplete="username"
-        placeholder="px_kai"
-        [value]="user()"
-        (input)="user.set($any($event.target).value)"
-      />
+  @if (sent()) {
+    <div class="auth-sent slide-in" role="status" aria-live="polite" style="text-align: center; padding: 8px 0">
+      <div class="pixel neon-cyan" style="font-size: 12px; margin-bottom: 12px">REVISA TU CORREO</div>
+      <p class="mono" style="font-size: 12px; color: var(--ink-faint); line-height: 1.7; letter-spacing: 0.04em">
+        Te enviamos un enlace de confirmación a <strong style="color: var(--cyan)">{{ email() }}</strong>.
+        Ábrelo para activar tu cuenta y luego inicia sesión.
+      </p>
+      @if (resent()) {
+        <p class="mono" style="color: var(--cyan); font-size: 11px; margin: 14px 0 0; letter-spacing: 0.08em">
+          CORREO REENVIADO ✓
+        </p>
+      } @else if (error(); as err) {
+        <p role="alert" aria-live="assertive" style="color: var(--magenta); font-size: 12px; margin: 14px 0 0; letter-spacing: 0.04em">
+          {{ err }}
+        </p>
+      }
+      <p class="mono" style="font-size: 11px; color: var(--ink-faint); margin: 16px 0 0; letter-spacing: 0.04em">
+        ¿No te llegó?
+      </p>
+      <button type="button" class="btn" [disabled]="loading() || resent()" style="width: 100%; margin-top: 8px" (click)="resend()">
+        {{ loading() ? 'ENVIANDO…' : 'REENVIAR CORREO' }}
+      </button>
+      <button type="button" class="btn ghost" style="width: 100%; margin-top: 10px" (click)="setTab('in')">
+        VOLVER A INICIAR SESIÓN
+      </button>
     </div>
-    @if (tab() === 'up') {
-      <div class="field slide-in">
+  } @else {
+    <div class="auth-tabs">
+      <button type="button" [class.on]="tab() === 'in'" (click)="setTab('in')">
+        INICIAR SESIÓN
+      </button>
+      <button type="button" [class.on]="tab() === 'up'" (click)="setTab('up')">CREAR CUENTA</button>
+    </div>
+    <form (submit)="submit($event)">
+      <div class="field">
         <label for="auth-email">Correo electrónico</label>
-        <input id="auth-email" type="email" autocomplete="email" placeholder="jugador@vault.gg" />
+        <input
+          id="auth-email"
+          type="email"
+          autocomplete="email"
+          placeholder="jugador@vault.gg"
+          [value]="email()"
+          (input)="email.set($any($event.target).value)"
+        />
       </div>
+      @if (tab() === 'up') {
+        <div class="field slide-in">
+          <label for="auth-user">Nombre de jugador</label>
+          <input
+            id="auth-user"
+            autocomplete="username"
+            maxlength="12"
+            placeholder="px_kai"
+            [value]="username()"
+            (input)="username.set($any($event.target).value)"
+          />
+        </div>
+      }
+      <div class="field">
+        <label for="auth-pass">Contraseña</label>
+        <input
+          id="auth-pass"
+          type="password"
+          [attr.autocomplete]="tab() === 'in' ? 'current-password' : 'new-password'"
+          placeholder="••••••••"
+          [value]="password()"
+          (input)="password.set($any($event.target).value)"
+        />
+      </div>
+      @if (error(); as err) {
+        <p role="alert" aria-live="assertive" style="color: var(--magenta); font-size: 12px; margin: 12px 0 0; letter-spacing: 0.04em">
+          {{ err }}
+        </p>
+      }
+      <button class="btn lg" type="submit" [disabled]="loading()" style="width: 100%; margin-top: 8px">
+        {{ loading() ? 'ENTRANDO…' : tab() === 'in' ? 'ENTRAR AL VAULT' : 'CREAR Y JUGAR' }}
+      </button>
+    </form>
+    @if (tab() === 'in') {
+      <a routerLink="/acceso/recuperar" style="display: block; text-align: center; margin-top: 12px; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em">
+        ¿Olvidaste tu contraseña?
+      </a>
     }
-    <div class="field">
-      <label for="auth-pass">Contraseña</label>
-      <input
-        id="auth-pass"
-        type="password"
-        autocomplete="current-password"
-        placeholder="••••••••"
-      />
+    <div class="auth-divider">O CONTINÚA CON</div>
+    <div class="social">
+      <button class="btn ghost" type="button" [disabled]="loading()" (click)="oauth('google')">
+        ◆ GOOGLE
+      </button>
+      <button class="btn ghost" type="button" [disabled]="loading()" (click)="oauth('github')">
+        ▣ GITHUB
+      </button>
     </div>
-
-    <button class="btn lg" type="submit" style="width: 100%; margin-top: 8px">
-      {{ tab() === 'in' ? 'ENTRAR AL VAULT' : 'CREAR Y JUGAR' }}
-    </button>
-  </form>
-
-  <button type="button" class="btn ghost" style="width: 100%; margin-top: 10px" (click)="guest()">
-    JUGAR COMO INVITADO
-  </button>
-
-  <div class="auth-divider">O CONTINÚA CON</div>
-  <div class="social">
-    <button class="btn ghost" type="button">◆ GOOGLE</button>
-    <button class="btn ghost" type="button">▣ GITHUB</button>
-  </div>
-
-  <div style="margin-top: 18px; text-align: center; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em">
-    AL ENTRAR ACEPTAS LOS TÉRMINOS DEL SALÓN ARCADE
-  </div>
+    <div style="margin-top: 18px; text-align: center; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em">
+      AL ENTRAR ACEPTAS LOS TÉRMINOS DEL SALÓN ARCADE
+    </div>
+  }
 </div>

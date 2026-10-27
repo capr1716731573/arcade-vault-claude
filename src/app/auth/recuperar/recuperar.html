@@ -1,0 +1,46 @@
+<div class="auth-card">
+  <div class="auth-header">
+    <div class="mark" aria-hidden="true"></div>
+    <h2 class="neon-cyan">RECUPERAR ACCESO</h2>
+    <div class="mono" style="font-size: 11px; color: var(--ink-faint); letter-spacing: 0.16em; margin-top: 6px">
+      RESTABLECER CONTRASEÑA
+    </div>
+  </div>
+  @if (sent()) {
+    <div class="slide-in" role="status" aria-live="polite" style="text-align: center; padding: 8px 0">
+      <div class="pixel neon-cyan" style="font-size: 12px; margin-bottom: 12px">REVISA TU CORREO</div>
+      <p class="mono" style="font-size: 12px; color: var(--ink-faint); line-height: 1.7; letter-spacing: 0.04em">
+        Si <strong style="color: var(--cyan)">{{ email() }}</strong> tiene una cuenta, te enviamos un
+        enlace para crear una contraseña nueva.
+      </p>
+      <a routerLink="/acceso" class="btn ghost" style="width: 100%; margin-top: 16px">
+        VOLVER AL ACCESO
+      </a>
+    </div>
+  } @else {
+    <form (submit)="submit($event)">
+      <div class="field">
+        <label for="rec-email">Correo electrónico</label>
+        <input
+          id="rec-email"
+          type="email"
+          autocomplete="email"
+          placeholder="jugador@vault.gg"
+          [value]="email()"
+          (input)="email.set($any($event.target).value)"
+        />
+      </div>
+      @if (error(); as err) {
+        <p role="alert" aria-live="assertive" style="color: var(--magenta); font-size: 12px; margin: 12px 0 0; letter-spacing: 0.04em">
+          {{ err }}
+        </p>
+      }
+      <button class="btn lg" type="submit" [disabled]="loading()" style="width: 100%; margin-top: 8px">
+        {{ loading() ? 'ENVIANDO…' : 'ENVIAR ENLACE' }}
+      </button>
+    </form>
+    <a routerLink="/acceso" style="display: block; text-align: center; margin-top: 12px; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em">
+      Volver a iniciar sesión
+    </a>
+  }
+</div>

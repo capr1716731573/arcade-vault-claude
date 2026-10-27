@@ -1,0 +1,52 @@
+<div class="auth-card">
+  <div class="auth-header">
+    <div class="mark" aria-hidden="true"></div>
+    <h2 class="neon-cyan">MI CUENTA</h2>
+    <div class="mono" style="font-size: 11px; color: var(--ink-faint); letter-spacing: 0.16em; margin-top: 6px">
+      PERFIL DEL JUGADOR
+    </div>
+  </div>
+  @if (session.user(); as user) {
+    <div class="field">
+      <label>Correo electrónico</label>
+      <div class="mono" style="font-size: 13px; color: var(--cyan); word-break: break-all">
+        {{ user.email || '—' }}
+      </div>
+    </div>
+    <div class="field">
+      <label>Proveedor</label>
+      <div class="mono" style="font-size: 13px; color: var(--ink-faint)">
+        {{ providerLabel[user.provider] }}
+      </div>
+    </div>
+    <form (submit)="save($event)">
+      <div class="field">
+        <label for="cuenta-name">Nombre de jugador</label>
+        <input
+          id="cuenta-name"
+          autocomplete="username"
+          maxlength="12"
+          placeholder="px_kai"
+          [value]="name()"
+          (input)="name.set($any($event.target).value)"
+        />
+      </div>
+      @if (error(); as err) {
+        <p role="alert" aria-live="assertive" style="color: var(--magenta); font-size: 12px; margin: 12px 0 0; letter-spacing: 0.04em">
+          {{ err }}
+        </p>
+      }
+      @if (saved()) {
+        <p role="status" aria-live="polite" style="color: var(--cyan); font-size: 12px; margin: 12px 0 0; letter-spacing: 0.04em">
+          Nombre actualizado.
+        </p>
+      }
+      <button class="btn lg" type="submit" [disabled]="saving()" style="width: 100%; margin-top: 8px">
+        {{ saving() ? 'GUARDANDO…' : 'GUARDAR NOMBRE' }}
+      </button>
+    </form>
+    <button type="button" class="btn ghost" style="width: 100%; margin-top: 10px" (click)="logout()">
+      CERRAR SESIÓN
+    </button>
+  }
+</div>

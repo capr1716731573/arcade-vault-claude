@@ -276,7 +276,11 @@ export class BloqueBusterEngine {
   private destroyed = false;
   private listening = false;
   private resizeObserver: ResizeObserver | null = null;
-  private lastSnapshotKey = '';
+  // Dedupe de emitState por comparación campo a campo (sin asignar string por frame).
+  private lastScore = -1;
+  private lastLives = -1;
+  private lastLevel = -1;
+  private lastPhase: BloqueBusterPhase | '' = '';
   private readonly onKeyDown = (e: KeyboardEvent) => {
     if (GAME_KEYS.has(e.code)) e.preventDefault();
     this.setKey(e.code, true);
@@ -495,9 +499,16 @@ export class BloqueBusterEngine {
   }
   // ── Update (simulación; no toca ctx) ─────────────────────────────────────────────
   update(dt: number) {
-    // Las partículas siguen avanzando para que la explosión termine su animación.
-    this.particles.forEach((p) => p.update(dt));
-    this.particles = this.particles.filter((p) => !p.dead);
+    // Las partículas siguen avanzando para que la explosión termine su animación;
+    // compactación in situ (sin crear array nuevo ni closures por frame).
+    const parts = this.particles;
+    let pw = 0;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      p.update(dt);
+      if (!p.dead) parts[pw++] = p;
+    }
+    parts.length = pw;
     if (this.phase !== 'playing') {
       if (this.pressed('Space')) this.initGame();
       return;
@@ -537,8 +548,9 @@ export class BloqueBusterEngine {
       this.ball.vy = -Math.abs(this.ball.vy);
       this.play(this.bounceSound);
     }
-    // Colisión con bloques (uno por frame).
-    for (const block of this.blocks) {
+    // Colisión con bloques (uno por frame); bucle indexado, sin closures.
+    for (let i = 0; i < this.blocks.length; i++) {
+      const block = this.blocks[i];
       if (!block.alive) continue;
       if (this.collideAABB(block)) {
         block.alive = false;
@@ -546,7 +558,14 @@ export class BloqueBusterEngine {
         this.score += SCORE_PER_BLOCK;
         this.ball.vy = -this.ball.vy;
         this.play(this.breakSound);
-        if (this.blocks.every((b) => !b.alive)) {
+        // ¿Quedan bloques vivos? Escaneo indexado (equivalente a .every() sin closure).
+        let anyAlive = false;
+        for (let j = 0; j < this.blocks.length; j++)
+          if (this.blocks[j].alive) {
+            anyAlive = true;
+            break;
+          }
+        if (!anyAlive) {
           if (this.level < LEVEL_COUNT) this.loadLevel(this.level + 1);
           else this.phase = 'win';
         }
@@ -581,20 +600,14 @@ export class BloqueBusterEngine {
   private drawBlock(ctx: CanvasRenderingContext2D, block: Block) {
     const p = this.palette;
     const color = p.blocks[block.color] ?? '#ffffff';
-    ctx.save();
-    if (p.glow) {
-      ctx.shadowColor = color;
-      ctx.shadowBlur = p.glow;
-    }
+    // Relleno plano (sin shadowBlur): el glow se reserva a la bola + overlay (≤2/frame).
     ctx.fillStyle = color;
     this.roundRect(ctx, block.x + 2, block.y + 2, block.w - 4, block.h - 4, 5);
     ctx.fill();
-    ctx.shadowBlur = 0;
     // Brillo superior.
     ctx.fillStyle = p.blockShine;
     this.roundRect(ctx, block.x + 4, block.y + 4, block.w - 8, (block.h - 8) * 0.42, 3);
     ctx.fill();
-    ctx.restore();
   }
   private drawOverlay(title: string, sub: string) {
     const ctx = this.ctx!;
@@ -622,20 +635,17 @@ export class BloqueBusterEngine {
     // Fondo.
     ctx.fillStyle = pal.bg;
     ctx.fillRect(0, 0, W, H);
-    // Bloques.
-    for (const block of this.blocks) if (block.alive) this.drawBlock(ctx, block);
-    // Partículas (explosión).
-    this.particles.forEach((p) => p.draw(ctx, pal.glow));
-    // Paleta (barra del skin activo).
-    ctx.save();
-    if (pal.glow) {
-      ctx.shadowColor = pal.paddle;
-      ctx.shadowBlur = pal.glow + 4;
+    // Bloques (bucle indexado, relleno plano).
+    for (let i = 0; i < this.blocks.length; i++) {
+      const block = this.blocks[i];
+      if (block.alive) this.drawBlock(ctx, block);
     }
+    // Partículas (explosión) — rellenos planos (glow = 0), sin sombra por partícula.
+    for (let i = 0; i < this.particles.length; i++) this.particles[i].draw(ctx, 0);
+    // Paleta (barra del skin activo) — relleno plano (el glow se reserva a la bola).
     ctx.fillStyle = pal.paddle;
     this.roundRect(ctx, this.paddle.x, this.paddle.y, this.paddle.w, this.paddle.h, 7);
     ctx.fill();
-    ctx.restore();
     // Bola (núcleo claro con halo del skin activo).
     ctx.save();
     if (pal.glow) {
@@ -667,10 +677,20 @@ export class BloqueBusterEngine {
   // ── Notificación de estado ───────────────────────────────────────────────────────
   private emitState(force = false) {
     if (!this.onState) return;
-    const s = this.getState();
-    const key = `${s.score}|${s.lives}|${s.level}|${s.phase}`;
-    if (!force && key === this.lastSnapshotKey) return;
-    this.lastSnapshotKey = key;
-    this.onState(s);
+    // Dedupe sin asignar por frame: comparación campo a campo; el snapshot (objeto)
+    // solo se crea cuando el estado observable cambia de verdad.
+    if (
+      !force &&
+      this.score === this.lastScore &&
+      this.lives === this.lastLives &&
+      this.level === this.lastLevel &&
+      this.phase === this.lastPhase
+    )
+      return;
+    this.lastScore = this.score;
+    this.lastLives = this.lives;
+    this.lastLevel = this.level;
+    this.lastPhase = this.phase;
+    this.onState(this.getState());
   }
 }
